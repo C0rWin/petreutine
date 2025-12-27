@@ -1,0 +1,9 @@
+{
+  "name": "PetReunite AI",
+  "description": "A smart lost and found pet message board powered by Gemini to help reunite owners with their pets through intelligent matching and search.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
