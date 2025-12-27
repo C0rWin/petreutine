@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
     },
+    preview: {
+      allowedHosts: ['petsreutine-p38ty.ondigitalocean.app'],
+    },
     define: {
       'process.env.API_KEY': JSON.stringify(env.API_KEY),
     }
