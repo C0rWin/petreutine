@@ -269,14 +269,14 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
                     </div>
                 )}
 
-                {!isChecking && matchedPosts.length === 0 && formData.description?.length > 10 && (
+                {!isChecking && matchedPosts.length === 0 && (formData.description?.length || 0) > 10 && (
                      <div className="text-center py-10 text-gray-400">
                         <p>No matches found yet.</p>
                         <p className="text-sm">We'll notify you if we find something later.</p>
                      </div>
                 )}
 
-                {!isChecking && matchedPosts.length === 0 && (!formData.description || formData.description.length <= 10) && (
+                {!isChecking && matchedPosts.length === 0 && (!formData.description || (formData.description?.length || 0) <= 10) && (
                     <div className="text-center py-10 text-gray-400">
                         <p>Start describing your pet to see matches.</p>
                     </div>
