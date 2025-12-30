@@ -1,0 +1,80 @@
+name: petreunite
+region: fra
+
+# Database
+databases:
+  - name: petreunite-db
+    engine: PG
+    version: "16"
+    size: db-s-1vcpu-1gb
+    num_nodes: 1
+
+services:
+  # Backend API
+  - name: api
+    github:
+      repo: C0rWin/petreutine
+      branch: main
+      deploy_on_push: true
+    source_dir: server
+    dockerfile_path: server/Dockerfile
+    http_port: 3001
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    routes:
+      - path: /api
+      - path: /health
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${petreunite-db.DATABASE_URL}
+      - key: CORS_ORIGIN
+        scope: RUN_TIME
+        value: ${APP_URL}
+      - key: AUTO_MIGRATE
+        value: "true"
+      - key: FRONTEND_URL
+        scope: RUN_TIME
+        value: ${APP_URL}
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: YANDEX_CLIENT_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: YANDEX_CLIENT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: YANDEX_REDIRECT_URI
+        scope: RUN_TIME
+        value: ${api.PUBLIC_URL}/api/auth/yandex/callback
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 10
+      period_seconds: 30
+
+static_sites:
+  # Frontend
+  - name: web
+    github:
+      repo: C0rWin/petreutine
+      branch: main
+      deploy_on_push: true
+    source_dir: /
+    build_command: npm install && npm run build
+    output_dir: dist
+    index_document: index.html
+    error_document: index.html
+    envs:
+      - key: VITE_API_URL
+        scope: BUILD_TIME
+        value: ${api.PUBLIC_URL}
+      - key: VITE_YANDEX_MAPS_API_KEY
+        scope: BUILD_TIME
+        type: SECRET
+    routes:
+      - path: /
