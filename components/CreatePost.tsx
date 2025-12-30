@@ -8,6 +8,13 @@ interface CreatePostProps {
   onSuccess: () => void;
 }
 
+const animalTypeLabels: Record<AnimalType, string> = {
+  [AnimalType.DOG]: 'Собака',
+  [AnimalType.CAT]: 'Кошка',
+  [AnimalType.BIRD]: 'Птица',
+  [AnimalType.OTHER]: 'Другое',
+};
+
 const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<Partial<PetPost>>({
@@ -104,7 +111,7 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
         {/* Left Side: Form */}
         <div className="w-full md:w-1/2 p-8 overflow-y-auto border-r border-gray-100">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">Create New Post</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Новое объявление</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -119,97 +126,97 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
                     onClick={() => setFormData(prev => ({...prev, type: PostType.LOST}))}
                     className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${formData.type === PostType.LOST ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                    Lost Pet
+                    Пропал питомец
                 </button>
                 <button
                     type="button"
                     onClick={() => setFormData(prev => ({...prev, type: PostType.FOUND}))}
                     className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${formData.type === PostType.FOUND ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                 >
-                    Found Pet
+                    Найден питомец
                 </button>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Animal Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Тип животного</label>
                 <select 
                     name="animalType" 
                     value={formData.animalType} 
                     onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                    {Object.values(AnimalType).map(t => <option key={t} value={t}>{t}</option>)}
+                    {Object.values(AnimalType).map(t => <option key={t} value={t}>{animalTypeLabels[t]}</option>)}
                 </select>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                <input 
-                    type="text" 
-                    name="title" 
-                    value={formData.title} 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Заголовок</label>
+                <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
                     onChange={handleInputChange}
-                    placeholder={`e.g., ${formData.type === PostType.LOST ? 'Lost Golden Retriever' : 'Found Small Kitten'}`}
+                    placeholder={`например, ${formData.type === PostType.LOST ? 'Пропал золотистый ретривер' : 'Найден маленький котёнок'}`}
                     className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea 
-                    name="description" 
-                    value={formData.description} 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Описание</label>
+                <textarea
+                    name="description"
+                    value={formData.description}
                     onChange={handleInputChange}
-                    placeholder="Describe specific features, collar, behavior..."
+                    placeholder="Опишите особые приметы, ошейник, поведение..."
                     rows={4}
                     className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                 />
-                <p className="text-xs text-gray-500 mt-1">Detailed descriptions help our AI find matches.</p>
+                <p className="text-xs text-gray-500 mt-1">Подробное описание помогает ИИ находить совпадения.</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                    <input 
-                        type="text" 
-                        name="location" 
-                        value={formData.location} 
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Местоположение</label>
+                    <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
                         onChange={handleInputChange}
-                        placeholder="City, Neighborhood, or Zip"
+                        placeholder="Город, район или индекс"
                         className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Reward (Optional)</label>
-                    <input 
-                        type="text" 
-                        name="reward" 
-                        value={formData.reward} 
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Вознаграждение (необязательно)</label>
+                    <input
+                        type="text"
+                        name="reward"
+                        value={formData.reward}
                         onChange={handleInputChange}
-                        placeholder="$ Amount"
+                        placeholder="Сумма"
                         className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                 </div>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Info</label>
-                <input 
-                    type="text" 
-                    name="contactInfo" 
-                    value={formData.contactInfo} 
+                <label className="block text-sm font-medium text-gray-700 mb-1">Контактная информация</label>
+                <input
+                    type="text"
+                    name="contactInfo"
+                    value={formData.contactInfo}
                     onChange={handleInputChange}
-                    placeholder="Phone or Email"
+                    placeholder="Телефон или Email"
                     className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Фото</label>
                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition-colors cursor-pointer relative">
                     <div className="space-y-1 text-center">
                         {formData.imageUrl ? (
@@ -221,7 +228,7 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
                                 </svg>
                                 <div className="flex text-sm text-gray-600 justify-center">
                                     <span className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-                                        <span>Upload a file</span>
+                                        <span>Загрузить файл</span>
                                         <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleImageUpload} accept="image/*" />
                                     </span>
                                 </div>
@@ -232,13 +239,13 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
             </div>
 
             <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
-                <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button 
-                    type="submit" 
+                <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Отмена</button>
+                <button
+                    type="submit"
                     disabled={isSubmitting}
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                    {isSubmitting ? 'Publishing...' : 'Publish Post'}
+                    {isSubmitting ? 'Публикация...' : 'Опубликовать'}
                 </button>
             </div>
 
@@ -254,10 +261,10 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">AI Match Detection</h3>
+                    <h3 className="text-xl font-bold text-gray-900">ИИ-поиск совпадений</h3>
                 </div>
                 <p className="text-sm text-gray-600">
-                    As you type, Gemini checks existing {formData.type === PostType.LOST ? 'Found' : 'Lost'} reports to see if your pet has already been reported.
+                    По мере ввода Gemini проверяет существующие объявления о {formData.type === PostType.LOST ? 'найденных' : 'пропавших'} питомцах.
                 </p>
             </div>
 
@@ -265,20 +272,20 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
                 {isChecking && (
                     <div className="flex items-center justify-center py-10">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                        <span className="ml-3 text-blue-600 font-medium">Analyzing potential matches...</span>
+                        <span className="ml-3 text-blue-600 font-medium">Анализ возможных совпадений...</span>
                     </div>
                 )}
 
                 {!isChecking && matchedPosts.length === 0 && (formData.description?.length || 0) > 10 && (
                      <div className="text-center py-10 text-gray-400">
-                        <p>No matches found yet.</p>
-                        <p className="text-sm">We'll notify you if we find something later.</p>
+                        <p>Совпадений пока не найдено.</p>
+                        <p className="text-sm">Мы уведомим вас, если найдём что-то позже.</p>
                      </div>
                 )}
 
                 {!isChecking && matchedPosts.length === 0 && (!formData.description || (formData.description?.length || 0) <= 10) && (
                     <div className="text-center py-10 text-gray-400">
-                        <p>Start describing your pet to see matches.</p>
+                        <p>Начните описывать питомца, чтобы увидеть совпадения.</p>
                     </div>
                 )}
 
@@ -298,20 +305,20 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
                                             <h4 className="font-bold text-gray-900">{post.title}</h4>
                                             {matchInfo && (
                                                 <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full font-medium">
-                                                    {(matchInfo.confidence * 100).toFixed(0)}% Match
+                                                    {(matchInfo.confidence * 100).toFixed(0)}% совпадение
                                                 </span>
                                             )}
                                         </div>
                                         <p className="text-xs text-gray-500 mt-1 line-clamp-2">{post.description}</p>
                                         <div className="mt-2 text-xs text-gray-500 flex items-center gap-3">
                                             <span>📍 {post.location}</span>
-                                            <span className="text-blue-600 font-medium">View Details</span>
+                                            <span className="text-blue-600 font-medium">Подробнее</span>
                                         </div>
                                     </div>
                                 </div>
                                 {matchInfo && (
                                     <div className="mt-3 text-xs bg-blue-50 p-2 rounded border border-blue-100 text-blue-800">
-                                        <strong>AI Insight:</strong> {matchInfo.reason}
+                                        <strong>ИИ-анализ:</strong> {matchInfo.reason}
                                     </div>
                                 )}
                             </div>

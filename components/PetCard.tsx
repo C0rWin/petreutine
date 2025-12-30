@@ -19,11 +19,11 @@ const PetCard: React.FC<PetCardProps> = ({ post, onClick }) => {
           <img src={post.imageUrl} alt={post.title} className="w-full h-full object-cover" />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">
-            No Image
+            Нет фото
           </div>
         )}
         <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold text-white uppercase tracking-wider ${isLost ? 'bg-red-500' : 'bg-green-500'}`}>
-          {post.type}
+          {isLost ? 'ПРОПАЛ' : 'НАЙДЕН'}
         </div>
       </div>
       
@@ -37,7 +37,7 @@ const PetCard: React.FC<PetCardProps> = ({ post, onClick }) => {
         <div className="space-y-2 mt-auto">
             {post.reward && (
                 <div className="flex items-center text-amber-600 text-sm font-semibold bg-amber-50 p-2 rounded">
-                    <span className="mr-2">🏆</span> Reward: {post.reward}
+                    <span className="mr-2">🏆</span> Вознаграждение: {post.reward}
                 </div>
             )}
             
