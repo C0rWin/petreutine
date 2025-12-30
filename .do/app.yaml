@@ -52,6 +52,24 @@ services:
       - key: YANDEX_REDIRECT_URI
         scope: RUN_TIME
         value: ${api.PUBLIC_URL}/api/auth/yandex/callback
+      - key: DO_SPACES_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: DO_SPACES_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: DO_SPACES_BUCKET
+        scope: RUN_TIME
+        value: petreunite
+      - key: DO_SPACES_REGION
+        scope: RUN_TIME
+        value: fra1
+      - key: DO_SPACES_ENDPOINT
+        scope: RUN_TIME
+        value: https://fra1.digitaloceanspaces.com
+      - key: DO_SPACES_CDN_URL
+        scope: RUN_TIME
+        value: https://petreunite.fra1.cdn.digitaloceanspaces.com
     health_check:
       http_path: /health
       initial_delay_seconds: 10

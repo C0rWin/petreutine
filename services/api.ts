@@ -198,6 +198,36 @@ class ApiService {
       body: JSON.stringify({ name, email }),
     });
   }
+
+  // Image upload
+  async uploadImage(file: File): Promise<ApiResponse<{ url: string; thumbnail: string; isBase64: boolean }>> {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const headers: Record<string, string> = {};
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/upload`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return { error: errorData.error || `Ошибка загрузки: ${response.status}` };
+      }
+
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      console.error('Upload failed:', error);
+      return { error: error instanceof Error ? error.message : 'Ошибка сети' };
+    }
+  }
 }
 
 export const api = new ApiService();

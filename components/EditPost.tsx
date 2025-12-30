@@ -31,6 +31,8 @@ const EditPost: React.FC<EditPostProps> = ({ post, onClose, onSuccess }) => {
     status: post.status,
   });
   const [showMap, setShowMap] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,19 +42,39 @@ const EditPost: React.FC<EditPostProps> = ({ post, onClose, onSuccess }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Размер файла не должен превышать 5 МБ');
+      if (file.size > 10 * 1024 * 1024) {
+        setError('Размер файла не должен превышать 10 МБ');
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      // Show local preview immediately
+      const localPreview = URL.createObjectURL(file);
+      setImagePreview(localPreview);
+      setIsUploading(true);
+      setError(null);
+
+      try {
+        const response = await api.uploadImage(file);
+        if (response.error) {
+          setError(response.error);
+          setImagePreview(null);
+          URL.revokeObjectURL(localPreview);
+          return;
+        }
+
+        if (response.data) {
+          setFormData(prev => ({ ...prev, imageUrl: response.data!.url }));
+        }
+      } catch (err) {
+        setError('Не удалось загрузить изображение');
+        setImagePreview(null);
+        URL.revokeObjectURL(localPreview);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -265,16 +287,27 @@ const EditPost: React.FC<EditPostProps> = ({ post, onClose, onSuccess }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Фото</label>
                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:bg-gray-50 transition-colors cursor-pointer relative">
                     <div className="space-y-1 text-center">
-                        {formData.imageUrl ? (
+                        {(formData.imageUrl || imagePreview) ? (
                             <div className="relative">
-                                <img src={formData.imageUrl} alt="Preview" className="mx-auto h-48 object-contain" />
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
-                                    className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
-                                >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                </button>
+                                <img src={formData.imageUrl || imagePreview || ''} alt="Preview" className={`mx-auto h-48 object-contain ${isUploading ? 'opacity-50' : ''}`} />
+                                {isUploading && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    </div>
+                                )}
+                                {!isUploading && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (imagePreview) URL.revokeObjectURL(imagePreview);
+                                            setFormData(prev => ({ ...prev, imageUrl: '' }));
+                                            setImagePreview(null);
+                                        }}
+                                        className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                )}
                             </div>
                         ) : (
                             <>
@@ -287,7 +320,7 @@ const EditPost: React.FC<EditPostProps> = ({ post, onClose, onSuccess }) => {
                                         <input type="file" className="sr-only" onChange={handleImageUpload} accept="image/*" />
                                     </label>
                                 </div>
-                                <p className="text-xs text-gray-500">PNG, JPG до 5 МБ</p>
+                                <p className="text-xs text-gray-500">PNG, JPG до 10 МБ</p>
                             </>
                         )}
                     </div>
@@ -302,13 +335,18 @@ const EditPost: React.FC<EditPostProps> = ({ post, onClose, onSuccess }) => {
             <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Отмена</button>
             <button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploading}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
                 {isSubmitting ? (
                     <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                         Сохранение...
+                    </>
+                ) : isUploading ? (
+                    <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Загрузка фото...
                     </>
                 ) : 'Сохранить'}
             </button>

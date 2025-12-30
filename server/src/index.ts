@@ -16,6 +16,7 @@ import {
 import postsRouter from './routes/posts.js';
 import searchRouter from './routes/search.js';
 import authRouter from './routes/auth.js';
+import uploadRouter from './routes/upload.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -76,6 +77,7 @@ app.use('/api', apiLimiter);
 app.use('/api/posts', postsRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/auth', authLimiter, authRouter);
+app.use('/api/upload', uploadRouter);
 
 // Error handling
 app.use(notFoundHandler);
