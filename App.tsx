@@ -6,6 +6,7 @@ import PetCard from './components/PetCard';
 import CreatePost from './components/CreatePost';
 import EditPost from './components/EditPost';
 import LocationMap from './components/LocationMap';
+import MatchCard from './components/MatchCard';
 
 const AppContent: React.FC = () => {
   const { user, isLoading: authLoading, login, logout } = useAuth();
@@ -24,6 +25,8 @@ const AppContent: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [matches, setMatches] = useState<(PetPost & { confidence: number; reason: string })[]>([]);
+  const [isLoadingMatches, setIsLoadingMatches] = useState(false);
 
   // Load posts from API
   const loadPosts = useCallback(async () => {
@@ -80,6 +83,34 @@ const AppContent: React.FC = () => {
   const clearSearch = () => {
     setSearchQuery('');
     loadPosts();
+  };
+
+  const loadMatches = async (postId: string) => {
+    setIsLoadingMatches(true);
+    setMatches([]);
+    try {
+      const response = await api.findMatches(postId);
+      if (response.data?.matches) {
+        setMatches(response.data.matches.map((m: PetPost & { confidence: number; reason: string }) => ({
+          ...normalizePost(m),
+          confidence: m.confidence,
+          reason: m.reason,
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to load matches:', err);
+    } finally {
+      setIsLoadingMatches(false);
+    }
+  };
+
+  const handleSelectPost = (post: PetPost) => {
+    setSelectedPost(post);
+    setMatches([]);
+    // Only load matches for OPEN posts
+    if (post.status !== 'RESOLVED') {
+      loadMatches(post.id);
+    }
   };
 
   const handleDeletePost = async () => {
@@ -238,7 +269,7 @@ const AppContent: React.FC = () => {
                             <PetCard
                                 key={post.id}
                                 post={post}
-                                onClick={() => setSelectedPost(post)}
+                                onClick={() => handleSelectPost(post)}
                             />
                         ))}
                     </div>
@@ -339,6 +370,38 @@ const AppContent: React.FC = () => {
                               </div>
                           </div>
                       </div>
+
+                      {/* Match Suggestions */}
+                      {selectedPost.status !== 'RESOLVED' && (
+                          <div className="border-t border-gray-100 pt-6 mb-6">
+                              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                  </svg>
+                                  Возможные совпадения
+                              </h3>
+                              {isLoadingMatches ? (
+                                  <div className="flex items-center justify-center py-8">
+                                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                  </div>
+                              ) : matches.length > 0 ? (
+                                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                                      {matches.map(match => (
+                                          <MatchCard
+                                              key={match.id}
+                                              match={match}
+                                              onClick={() => handleSelectPost(match)}
+                                          />
+                                      ))}
+                                  </div>
+                              ) : (
+                                  <div className="text-center py-6 bg-gray-50 rounded-lg">
+                                      <p className="text-sm text-gray-500">Пока нет подходящих совпадений</p>
+                                      <p className="text-xs text-gray-400 mt-1">Совпадения появятся, когда кто-то опубликует похожее объявление</p>
+                                  </div>
+                              )}
+                          </div>
+                      )}
 
                       <div className="border-t border-gray-100 pt-6">
                            <div className="flex items-center justify-between">
