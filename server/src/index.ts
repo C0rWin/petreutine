@@ -4,6 +4,15 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { initializeDatabase } from './db/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import {
+  apiLimiter,
+  authLimiter,
+  createPostLimiter,
+  httpsRedirect,
+  sanitizeInput,
+  securityHeaders,
+  requestLogger,
+} from './middleware/security.js';
 import postsRouter from './routes/posts.js';
 import searchRouter from './routes/search.js';
 import authRouter from './routes/auth.js';
@@ -11,28 +20,62 @@ import authRouter from './routes/auth.js';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Security middleware
-app.use(helmet());
+// Trust proxy for proper IP detection behind load balancers
+app.set('trust proxy', 1);
+
+// HTTPS redirect in production
+app.use(httpsRedirect);
+
+// Security middleware - Helmet with enhanced config
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://api-maps.yandex.ru"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https://api-maps.yandex.ru", "https://oauth.yandex.ru"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow embedding maps
+}));
+
+// Additional security headers
+app.use(securityHeaders);
+
+// Request logging in production
+app.use(requestLogger);
 
 // CORS configuration
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Body parsing
+// Body parsing with size limits
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health check endpoint
+// Input sanitization
+app.use(sanitizeInput);
+
+// Health check endpoint (no rate limiting)
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API routes
+// Apply rate limiting to API routes
+app.use('/api', apiLimiter);
+
+// API routes with specific rate limits
 app.use('/api/posts', postsRouter);
 app.use('/api/search', searchRouter);
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authLimiter, authRouter);
 
 // Error handling
 app.use(notFoundHandler);

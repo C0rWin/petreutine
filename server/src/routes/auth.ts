@@ -96,7 +96,7 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    const tokenData: YandexTokenResponse = await tokenResponse.json();
+    const tokenData = await tokenResponse.json() as YandexTokenResponse;
 
     // Get user info from Yandex
     const userInfoResponse = await fetch(`${YANDEX_USER_INFO_URL}?format=json`, {
@@ -112,7 +112,7 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    const yandexUser: YandexUserInfo = await userInfoResponse.json();
+    const yandexUser = await userInfoResponse.json() as YandexUserInfo;
 
     // Build user name
     const userName = yandexUser.real_name ||

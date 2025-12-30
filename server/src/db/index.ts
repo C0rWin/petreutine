@@ -1,4 +1,4 @@
-import pg from 'pg';
+import pg, { QueryResultRow } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -27,7 +27,7 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
-export async function query<T = unknown>(
+export async function query<T extends QueryResultRow = QueryResultRow>(
   text: string,
   params?: unknown[]
 ): Promise<pg.QueryResult<T>> {

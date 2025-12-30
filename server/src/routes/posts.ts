@@ -9,6 +9,7 @@ import {
 } from '../types/index.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { createPostLimiter } from '../middleware/security.js';
 
 const router = Router();
 
@@ -98,8 +99,8 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response, next: NextFu
   }
 });
 
-// Create new post - requires authentication
-router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+// Create new post - requires authentication + rate limiting
+router.post('/', createPostLimiter, requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
     const data: CreatePostInput = createPostSchema.parse(req.body);
@@ -155,7 +156,7 @@ router.put('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response,
     const userId = req.userId!;
 
     // Check ownership
-    const ownerCheck = await query('SELECT user_id FROM posts WHERE id = $1', [id]);
+    const ownerCheck = await query<{ user_id: string }>('SELECT user_id FROM posts WHERE id = $1', [id]);
     if (ownerCheck.rows.length === 0) {
       throw new AppError('Объявление не найдено', 404);
     }
@@ -220,7 +221,7 @@ router.delete('/:id', requireAuth, async (req: AuthenticatedRequest, res: Respon
     const userId = req.userId!;
 
     // Check ownership
-    const ownerCheck = await query('SELECT user_id FROM posts WHERE id = $1', [id]);
+    const ownerCheck = await query<{ user_id: string }>('SELECT user_id FROM posts WHERE id = $1', [id]);
     if (ownerCheck.rows.length === 0) {
       throw new AppError('Объявление не найдено', 404);
     }
