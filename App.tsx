@@ -4,6 +4,7 @@ import { PetPost, PostType, normalizePost } from './types';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import PetCard from './components/PetCard';
 import CreatePost from './components/CreatePost';
+import EditPost from './components/EditPost';
 import LocationMap from './components/LocationMap';
 
 const AppContent: React.FC = () => {
@@ -22,6 +23,7 @@ const AppContent: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<PetPost | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Load posts from API
   const loadPosts = useCallback(async () => {
@@ -284,10 +286,18 @@ const AppContent: React.FC = () => {
                   <div className="p-8">
                       <div className="flex justify-between items-start mb-4">
                           <div>
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
                                   <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase text-white ${selectedPost.type === PostType.LOST ? 'bg-red-500' : 'bg-green-500'}`}>
                                       {selectedPost.type === PostType.LOST ? 'ПРОПАЛ' : 'НАЙДЕН'}
                                   </span>
+                                  {selectedPost.status === 'RESOLVED' && (
+                                      <span className="px-2 py-0.5 rounded text-xs font-bold uppercase text-white bg-blue-500 flex items-center gap-1">
+                                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                          </svg>
+                                          ЗАВЕРШЕНО
+                                      </span>
+                                  )}
                                   <span className="text-sm text-gray-500">{formatDate(selectedPost)}</span>
                               </div>
                               <h2 className="text-3xl font-bold text-gray-900">{selectedPost.title}</h2>
@@ -340,12 +350,20 @@ const AppContent: React.FC = () => {
                                    </div>
                                </div>
                                {user && selectedPost.user.id === user.id && (
-                                   <button
-                                       onClick={() => setShowDeleteConfirm(true)}
-                                       className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                                   >
-                                       Удалить
-                                   </button>
+                                   <div className="flex gap-2">
+                                       <button
+                                           onClick={() => setIsEditModalOpen(true)}
+                                           className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                       >
+                                           Редактировать
+                                       </button>
+                                       <button
+                                           onClick={() => setShowDeleteConfirm(true)}
+                                           className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                       >
+                                           Удалить
+                                       </button>
+                                   </div>
                                )}
                            </div>
                       </div>
@@ -377,6 +395,21 @@ const AppContent: React.FC = () => {
                   </div>
               )}
           </div>
+      )}
+
+      {/* Edit Post Modal */}
+      {isEditModalOpen && selectedPost && (
+        <EditPost
+            post={selectedPost}
+            onClose={() => setIsEditModalOpen(false)}
+            onSuccess={(updatedPost) => {
+                // Update in posts list
+                setPosts(posts.map(p => p.id === updatedPost.id ? normalizePost(updatedPost) : p));
+                // Update selected post
+                setSelectedPost(normalizePost(updatedPost));
+                setIsEditModalOpen(false);
+            }}
+        />
       )}
 
     </div>

@@ -140,6 +140,7 @@ class ApiService {
     if (updates.contactInfo) body.contact_info = updates.contactInfo;
     if (updates.reward !== undefined) body.reward = updates.reward;
     if (updates.imageUrl !== undefined) body.image_url = updates.imageUrl;
+    if (updates.status) body.status = updates.status;
 
     return this.request<PetPost>(`/api/posts/${id}`, {
       method: 'PUT',
