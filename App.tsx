@@ -4,6 +4,7 @@ import { PetPost, PostType, normalizePost } from './types';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import PetCard from './components/PetCard';
 import CreatePost from './components/CreatePost';
+import LocationMap from './components/LocationMap';
 
 const AppContent: React.FC = () => {
   const { user, isLoading: authLoading, login, logout } = useAuth();
@@ -19,6 +20,8 @@ const AppContent: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [selectedPost, setSelectedPost] = useState<PetPost | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Load posts from API
   const loadPosts = useCallback(async () => {
@@ -77,6 +80,28 @@ const AppContent: React.FC = () => {
     loadPosts();
   };
 
+  const handleDeletePost = async () => {
+    if (!selectedPost) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await api.deletePost(selectedPost.id);
+      if (response.error) {
+        setError(response.error);
+        return;
+      }
+      // Remove from local state and close modal
+      setPosts(posts.filter(p => p.id !== selectedPost.id));
+      setSelectedPost(null);
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      setError('Не удалось удалить объявление');
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Filter based on Tabs (client-side for cached posts)
   const displayPosts = posts.filter(p => {
     if (activeTab === 'ALL') return true;
@@ -123,10 +148,10 @@ const AppContent: React.FC = () => {
               ) : (
                 <button
                     onClick={login}
-                    className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="flex items-center gap-2 bg-[#FC3F1D] hover:bg-[#E53510] text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                      <path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12zm10.5-5.5h-1.02c-1.87 0-2.94 1.01-2.94 2.47 0 1.19.54 1.94 1.69 2.74l.95.66-2.71 4.13h1.9l2.34-3.72.62.43c1.35.94 1.96 1.66 1.96 3.02 0 .09 0 .18-.01.27h1.72V6.5h-1.83v4.62c-.56-.72-1.33-1.29-2.28-1.94l-.39-.27V6.5z"/>
                     </svg>
                     Войти через Яндекс
                 </button>
@@ -281,11 +306,19 @@ const AppContent: React.FC = () => {
                           </div>
                           <div className="space-y-4">
                               <div>
-                                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Местоположение</h3>
-                                  <div className="flex items-center text-gray-800">
+                                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Местоположение</h3>
+                                  <div className="flex items-center text-gray-800 mb-3">
                                       <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                       {selectedPost.location}
                                   </div>
+                                  {(selectedPost.latitude && selectedPost.longitude) && (
+                                      <LocationMap
+                                          latitude={selectedPost.latitude}
+                                          longitude={selectedPost.longitude}
+                                          location={selectedPost.location}
+                                          type={selectedPost.type}
+                                      />
+                                  )}
                               </div>
                               <div>
                                   <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Контакты</h3>
@@ -298,16 +331,51 @@ const AppContent: React.FC = () => {
                       </div>
 
                       <div className="border-t border-gray-100 pt-6">
-                           <div className="flex items-center gap-3">
-                               <img src={selectedPost.user.avatarUrl || selectedPost.user.avatar_url || 'https://avatars.yandex.net/get-yapic/0/0-0/islands-200'} alt="" className="w-10 h-10 rounded-full" />
-                               <div>
-                                   <p className="text-sm font-medium text-gray-900">Автор: {selectedPost.user.name}</p>
-                                   <p className="text-xs text-gray-500">Подтверждённый пользователь</p>
+                           <div className="flex items-center justify-between">
+                               <div className="flex items-center gap-3">
+                                   <img src={selectedPost.user.avatarUrl || selectedPost.user.avatar_url || 'https://avatars.yandex.net/get-yapic/0/0-0/islands-200'} alt="" className="w-10 h-10 rounded-full" />
+                                   <div>
+                                       <p className="text-sm font-medium text-gray-900">Автор: {selectedPost.user.name}</p>
+                                       <p className="text-xs text-gray-500">Подтверждённый пользователь</p>
+                                   </div>
                                </div>
+                               {user && selectedPost.user.id === user.id && (
+                                   <button
+                                       onClick={() => setShowDeleteConfirm(true)}
+                                       className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                   >
+                                       Удалить
+                                   </button>
+                               )}
                            </div>
                       </div>
                   </div>
               </div>
+
+              {/* Delete Confirmation Dialog */}
+              {showDeleteConfirm && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+                      <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">Удалить объявление?</h3>
+                          <p className="text-gray-600 mb-6">Это действие нельзя отменить. Объявление будет удалено навсегда.</p>
+                          <div className="flex gap-3">
+                              <button
+                                  onClick={() => setShowDeleteConfirm(false)}
+                                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+                              >
+                                  Отмена
+                              </button>
+                              <button
+                                  onClick={handleDeletePost}
+                                  disabled={isDeleting}
+                                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                  {isDeleting ? 'Удаление...' : 'Удалить'}
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              )}
           </div>
       )}
 

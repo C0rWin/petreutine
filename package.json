@@ -1,5 +1,5 @@
 {
-  "name": "pet-reunite-ai",
+  "name": "petreunite",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -10,7 +10,6 @@
     "start": "vite preview --port ${PORT:-8080} --host"
   },
   "dependencies": {
-    "@google/genai": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

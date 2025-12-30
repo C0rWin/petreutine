@@ -163,7 +163,7 @@ const YandexMap: React.FC<YandexMapProps> = ({
           onLocationSelect(address, coords[0], coords[1]);
 
           if (bounds) {
-            map.setBounds(bounds, { checkZoomRange: true });
+            map.setBounds(bounds as [[number, number], [number, number]], { checkZoomRange: true });
           } else {
             map.setCenter(coords, 15);
           }

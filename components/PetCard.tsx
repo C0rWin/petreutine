@@ -45,7 +45,7 @@ const PetCard: React.FC<PetCardProps> = ({ post, onClick }) => {
                 <span className="mr-2">📍</span> {post.location}
             </div>
             <div className="flex items-center text-gray-500 text-xs">
-                 <span className="mr-2">🕒</span> {new Date(post.createdAt).toLocaleDateString()}
+                 <span className="mr-2">🕒</span> {new Date(post.createdAt || post.created_at || Date.now()).toLocaleDateString()}
             </div>
         </div>
       </div>
