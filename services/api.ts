@@ -112,6 +112,10 @@ class ApiService {
     return this.request<PetPost>(`/api/posts/${id}`);
   }
 
+  async getMyPosts(): Promise<ApiResponse<PostsResponse>> {
+    return this.request<PostsResponse>('/api/posts/my');
+  }
+
   async createPost(post: Omit<PetPost, 'id' | 'userId' | 'user' | 'createdAt' | 'status'> & { latitude?: number; longitude?: number }): Promise<ApiResponse<PetPost>> {
     return this.request<PetPost>('/api/posts', {
       method: 'POST',

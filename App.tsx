@@ -7,6 +7,7 @@ import CreatePost from './components/CreatePost';
 import EditPost from './components/EditPost';
 import LocationMap from './components/LocationMap';
 import MatchCard from './components/MatchCard';
+import MyPosts from './components/MyPosts';
 
 const AppContent: React.FC = () => {
   const { user, isLoading: authLoading, login, logout } = useAuth();
@@ -27,6 +28,7 @@ const AppContent: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [matches, setMatches] = useState<(PetPost & { confidence: number; reason: string })[]>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+  const [isMyPostsOpen, setIsMyPostsOpen] = useState(false);
 
   // Load posts from API
   const loadPosts = useCallback(async () => {
@@ -166,6 +168,15 @@ const AppContent: React.FC = () => {
               ) : user ? (
                 <>
                   <button
+                    onClick={() => setIsMyPostsOpen(true)}
+                    className="hidden sm:flex items-center gap-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Мои объявления
+                  </button>
+                  <button
                     onClick={() => setIsCreateModalOpen(true)}
                     className="hidden sm:flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm"
                   >
@@ -284,14 +295,26 @@ const AppContent: React.FC = () => {
         )}
       </main>
 
-      {/* Floating Action Button for Mobile */}
+      {/* Floating Action Buttons for Mobile */}
       {user && (
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="sm:hidden fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-40"
-          >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          </button>
+          <div className="sm:hidden fixed bottom-6 right-6 flex flex-col gap-3 z-40">
+              <button
+                onClick={() => setIsMyPostsOpen(true)}
+                className="bg-white text-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-50 transition-colors border border-gray-200"
+                title="Мои объявления"
+              >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+              </button>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                title="Создать объявление"
+              >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              </button>
+          </div>
       )}
 
       {/* Modals */}
@@ -471,6 +494,17 @@ const AppContent: React.FC = () => {
                 // Update selected post
                 setSelectedPost(normalizePost(updatedPost));
                 setIsEditModalOpen(false);
+            }}
+        />
+      )}
+
+      {/* My Posts Modal */}
+      {isMyPostsOpen && (
+        <MyPosts
+            onClose={() => setIsMyPostsOpen(false)}
+            onSelectPost={(post) => {
+                setIsMyPostsOpen(false);
+                handleSelectPost(post);
             }}
         />
       )}

@@ -65,6 +65,40 @@ router.get('/', async (req: AuthenticatedRequest, res: Response, next: NextFunct
   }
 });
 
+// Get current user's posts - requires authentication
+router.get('/my', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId!;
+
+    const result = await query<PetPostWithUser>(
+      `
+      SELECT
+        p.*,
+        json_build_object(
+          'id', u.id,
+          'name', u.name,
+          'email', u.email,
+          'avatar_url', u.avatar_url,
+          'yandex_id', u.yandex_id,
+          'created_at', u.created_at
+        ) as user
+      FROM posts p
+      JOIN users u ON p.user_id = u.id
+      WHERE p.user_id = $1
+      ORDER BY p.created_at DESC
+    `,
+      [userId]
+    );
+
+    res.json({
+      posts: result.rows,
+      total: result.rowCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get single post by ID - public
 router.get('/:id', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
