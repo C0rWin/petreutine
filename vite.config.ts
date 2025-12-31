@@ -13,6 +13,13 @@ export default defineConfig({
     },
   },
   preview: {
+    host: true,
     allowedHosts: ['petsreutine-p38ty.ondigitalocean.app'],
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL || 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
   },
 });
