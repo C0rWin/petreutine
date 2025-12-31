@@ -9,12 +9,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Database connection configuration
+// Digital Ocean managed databases use self-signed certificates
+const sslConfig = process.env.NODE_ENV === 'production'
+  ? {
+      rejectUnauthorized: false,
+      // DO managed databases require SSL but use self-signed certs
+    }
+  : false;
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: sslConfig,
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000, // Increased for initial connection
 });
 
 // Test database connection
