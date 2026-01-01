@@ -53,7 +53,7 @@ services:
         type: SECRET
       - key: YANDEX_REDIRECT_URI
         scope: RUN_TIME
-        value: ${api.PUBLIC_URL}/api/auth/yandex/callback
+        value: ${APP_URL}/api/auth/yandex/callback
       - key: DO_SPACES_KEY
         scope: RUN_TIME
         type: SECRET
