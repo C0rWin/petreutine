@@ -36,6 +36,18 @@ export const createPostLimiter = rateLimit({
 
 // HTTPS redirect middleware for production
 export function httpsRedirect(req: Request, res: Response, next: NextFunction): void {
+  // Skip HTTPS redirect for health checks (internal requests)
+  if (req.path === '/health') {
+    next();
+    return;
+  }
+
+  // Skip if no x-forwarded-proto header (internal/direct requests)
+  if (!req.headers['x-forwarded-proto']) {
+    next();
+    return;
+  }
+
   // Check if we're in production and request is not secure
   if (
     process.env.NODE_ENV === 'production' &&
