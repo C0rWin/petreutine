@@ -57,13 +57,17 @@ export const mockPost = {
   },
 };
 
-export const createMockRequest = (overrides = {}) => ({
+export const createMockRequest = (overrides: Record<string, any> = {}): Record<string, any> => ({
   body: {},
   params: {},
   query: {},
   headers: {},
   user: undefined,
   userId: undefined,
+  path: '/',
+  url: '/',
+  method: 'GET',
+  ip: '127.0.0.1',
   ...overrides,
 });
 
