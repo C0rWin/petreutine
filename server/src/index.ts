@@ -71,13 +71,15 @@ app.get('/health', (_req, res) => {
 });
 
 // Apply rate limiting to API routes
-app.use('/api', apiLimiter);
+// Note: DO App Platform strips /api prefix when routing to this service
+app.use(apiLimiter);
 
 // API routes with specific rate limits
-app.use('/api/posts', postsRouter);
-app.use('/api/search', searchRouter);
-app.use('/api/auth', authLimiter, authRouter);
-app.use('/api/upload', uploadRouter);
+// Paths don't include /api because DO strips it when routing
+app.use('/posts', postsRouter);
+app.use('/search', searchRouter);
+app.use('/auth', authLimiter, authRouter);
+app.use('/upload', uploadRouter);
 
 // Error handling
 app.use(notFoundHandler);
