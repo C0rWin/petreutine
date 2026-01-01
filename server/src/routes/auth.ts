@@ -161,8 +161,8 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       email: user.email,
     });
 
-    // Redirect to frontend with token
-    res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`);
+    // Redirect to frontend with token (use root path for SPA compatibility)
+    res.redirect(`${FRONTEND_URL}/?token=${token}`);
   } catch (error) {
     console.error('Yandex OAuth callback error:', error);
     next(error);
