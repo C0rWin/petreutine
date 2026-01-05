@@ -11,9 +11,12 @@ export interface JwtPayload {
   email: string;
 }
 
+export type UserRoleType = 'admin' | 'moderator';
+
 export interface AuthenticatedRequest extends Request {
   user?: User;
   userId?: string;
+  userRoles?: UserRoleType[];
 }
 
 // Generate JWT token

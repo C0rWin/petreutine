@@ -1,4 +1,4 @@
-import { PetPost, User, PostType, AnimalType } from '../types';
+import { PetPost, User, PostType, AnimalType, Comment, Notification, VoteType, ReportReason } from '../types';
 
 // In development, Vite proxies /api to the backend
 // In production, the API is served from the same domain
@@ -35,6 +35,27 @@ interface MatchesResponse {
 interface AuthResponse {
   user: User;
   token: string;
+}
+
+interface CommentsResponse {
+  comments: Comment[];
+  total: number;
+}
+
+interface VoteResponse {
+  upvotes: number;
+  downvotes: number;
+  score: number;
+  current_user_vote: VoteType | null;
+}
+
+interface NotificationsResponse {
+  notifications: Notification[];
+  total: number;
+}
+
+interface UnreadCountResponse {
+  count: number;
 }
 
 class ApiService {
@@ -231,6 +252,108 @@ class ApiService {
       console.error('Upload failed:', error);
       return { error: error instanceof Error ? error.message : 'Ошибка сети' };
     }
+  }
+
+  // ============================================
+  // COMMENTS API
+  // ============================================
+
+  async getComments(postId: string, options?: {
+    sort?: 'best' | 'new' | 'old' | 'controversial';
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<CommentsResponse>> {
+    const params = new URLSearchParams();
+    if (options?.sort) params.set('sort', options.sort);
+    if (options?.limit) params.set('limit', options.limit.toString());
+    if (options?.offset) params.set('offset', options.offset.toString());
+
+    const queryString = params.toString();
+    return this.request<CommentsResponse>(`/api/posts/${postId}/comments${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async createComment(data: {
+    post_id: string;
+    parent_id?: string | null;
+    content: string;
+  }): Promise<ApiResponse<Comment>> {
+    return this.request<Comment>('/api/comments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateComment(id: string, content: string): Promise<ApiResponse<Comment>> {
+    return this.request<Comment>(`/api/comments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  async deleteComment(id: string): Promise<ApiResponse<void>> {
+    return this.request<void>(`/api/comments/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async voteComment(id: string, voteType: VoteType): Promise<ApiResponse<VoteResponse>> {
+    return this.request<VoteResponse>(`/api/comments/${id}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({ vote_type: voteType }),
+    });
+  }
+
+  async removeVote(id: string): Promise<ApiResponse<VoteResponse>> {
+    return this.request<VoteResponse>(`/api/comments/${id}/vote`, {
+      method: 'DELETE',
+    });
+  }
+
+  async reportComment(id: string, reason: ReportReason, description?: string): Promise<ApiResponse<{ message: string }>> {
+    return this.request<{ message: string }>(`/api/comments/${id}/report`, {
+      method: 'POST',
+      body: JSON.stringify({ reason, description }),
+    });
+  }
+
+  // ============================================
+  // NOTIFICATIONS API
+  // ============================================
+
+  async getNotifications(options?: {
+    limit?: number;
+    offset?: number;
+    unread_only?: boolean;
+  }): Promise<ApiResponse<NotificationsResponse>> {
+    const params = new URLSearchParams();
+    if (options?.limit) params.set('limit', options.limit.toString());
+    if (options?.offset) params.set('offset', options.offset.toString());
+    if (options?.unread_only) params.set('unread_only', 'true');
+
+    const queryString = params.toString();
+    return this.request<NotificationsResponse>(`/api/notifications${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getUnreadCount(): Promise<ApiResponse<UnreadCountResponse>> {
+    return this.request<UnreadCountResponse>('/api/notifications/unread-count');
+  }
+
+  async markNotificationRead(id: string): Promise<ApiResponse<{ success: boolean }>> {
+    return this.request<{ success: boolean }>(`/api/notifications/${id}/read`, {
+      method: 'POST',
+    });
+  }
+
+  async markAllNotificationsRead(): Promise<ApiResponse<{ success: boolean; updated: number }>> {
+    return this.request<{ success: boolean; updated: number }>('/api/notifications/read-all', {
+      method: 'POST',
+    });
+  }
+
+  async deleteNotification(id: string): Promise<ApiResponse<void>> {
+    return this.request<void>(`/api/notifications/${id}`, {
+      method: 'DELETE',
+    });
   }
 }
 

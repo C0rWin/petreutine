@@ -17,6 +17,9 @@ import postsRouter from './routes/posts.js';
 import searchRouter from './routes/search.js';
 import authRouter from './routes/auth.js';
 import uploadRouter from './routes/upload.js';
+import commentsRouter from './routes/comments.js';
+import notificationsRouter from './routes/notifications.js';
+import moderationRouter from './routes/moderation.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -84,6 +87,12 @@ app.use('/api/auth', authLimiter, authRouter);
 app.use('/auth', authLimiter, authRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/upload', uploadRouter);
+app.use('/api/comments', commentsRouter);
+app.use('/comments', commentsRouter);
+app.use('/api/notifications', notificationsRouter);
+app.use('/notifications', notificationsRouter);
+app.use('/api/moderation', moderationRouter);
+app.use('/moderation', moderationRouter);
 
 // Error handling
 app.use(notFoundHandler);

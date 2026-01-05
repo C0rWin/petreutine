@@ -12,6 +12,7 @@
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@aws-sdk/client-s3": "^3.474.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

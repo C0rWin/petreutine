@@ -6,11 +6,92 @@
     <meta name="description" content="ДомойСкорей - сервис для поиска пропавших и найденных домашних животных" />
     <title>ДомойСкорей - Найдите своего питомца</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              coral: {
+                50: '#fff5f5',
+                100: '#ffe3e3',
+                200: '#ffc9c9',
+                300: '#ffa8a8',
+                400: '#ff8787',
+                500: '#ff6b6b',
+                600: '#fa5252',
+                700: '#f03e3e',
+                800: '#e03131',
+                900: '#c92a2a',
+              },
+              teal: {
+                50: '#e6fffa',
+                100: '#b2f5ea',
+                200: '#81e6d9',
+                300: '#4fd1c5',
+                400: '#4ecdc4',
+                500: '#38b2ac',
+                600: '#319795',
+                700: '#2c7a7b',
+                800: '#285e61',
+                900: '#234e52',
+              },
+              warm: {
+                50: '#fffbeb',
+                100: '#fef3c7',
+                200: '#fde68a',
+                300: '#ffe66d',
+                400: '#fbbf24',
+                500: '#f59e0b',
+              }
+            },
+            animation: {
+              'pulse-urgent': 'pulse-urgent 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'fade-in': 'fadeIn 0.3s ease-out',
+              'slide-up': 'slideUp 0.3s ease-out',
+            },
+            keyframes: {
+              'pulse-urgent': {
+                '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                '50%': { opacity: '0.8', transform: 'scale(1.05)' },
+              },
+              'fadeIn': {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              'slideUp': {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #f3f4f6;
+        background: linear-gradient(135deg, #fff5f5 0%, #e6fffa 100%);
+        min-height: 100vh;
+      }
+      .card-hover {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .card-hover:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+      .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s infinite;
+      }
+      @keyframes skeleton-loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+      .gradient-overlay {
+        background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 40%, transparent 100%);
       }
     </style>
   </head>
