@@ -86,7 +86,7 @@ delete: ## Delete the app (DANGEROUS!)
 status: ## Show app deployment status
 	@echo "$(GREEN)App Status:$(NC)"
 	$(eval APP_ID := $(shell doctl apps list --format ID,Spec.Name --no-header | grep $(APP_NAME) | awk '{print $$1}'))
-	@doctl apps get $(APP_ID) --format ID,DefaultIngress,ActiveDeployment.Phase,UpdatedAt
+	@doctl apps get $(APP_ID)
 
 .PHONY: info
 info: ## Show detailed app information
@@ -295,10 +295,9 @@ doctl-check: ## Verify doctl is installed and authenticated
 
 .PHONY: health
 health: ## Check app health endpoint
-	$(eval APP_ID := $(shell doctl apps list --format ID,Spec.Name --no-header | grep $(APP_NAME) | awk '{print $$1}'))
-	$(eval URL := $(shell doctl apps get $(APP_ID) --format DefaultIngress --no-header))
 	@echo "$(GREEN)Checking health...$(NC)"
-	@curl -s https://$(URL)/health | jq . || curl -s https://$(URL)/health
+	@URL=$$(doctl apps list --format DefaultIngress,Spec.Name --no-header | grep $(APP_NAME) | awk '{print $$1}') && \
+		curl -s $$URL/api/health | jq . 2>/dev/null || curl -s $$URL/api/health
 
 # Default target
 .DEFAULT_GOAL := help
