@@ -20,6 +20,7 @@ import uploadRouter from './routes/upload.js';
 import commentsRouter from './routes/comments.js';
 import notificationsRouter from './routes/notifications.js';
 import moderationRouter from './routes/moderation.js';
+import adminRouter from './routes/admin.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -93,6 +94,8 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/api/moderation', moderationRouter);
 app.use('/moderation', moderationRouter);
+app.use('/api/admin', adminRouter);
+app.use('/admin', adminRouter);
 
 // Error handling
 app.use(notFoundHandler);

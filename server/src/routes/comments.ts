@@ -146,13 +146,23 @@ router.post(
       const userId = req.userId!;
       const data: CreateCommentInput = createCommentSchema.parse(req.body);
 
-      // Verify post exists
-      const postCheck = await query<{ id: string; user_id: string }>(
-        'SELECT id, user_id FROM posts WHERE id = $1',
+      // Check if user is banned from commenting (both 'full' and 'comment' ban types)
+      if (req.userBanType) {
+        throw new AppError('Вам запрещено оставлять комментарии', 403);
+      }
+
+      // Verify post exists and comments are enabled
+      const postCheck = await query<{ id: string; user_id: string; comments_enabled: boolean }>(
+        'SELECT id, user_id, comments_enabled FROM posts WHERE id = $1',
         [data.post_id]
       );
       if (postCheck.rows.length === 0) {
         throw new AppError('Объявление не найдено', 404);
+      }
+
+      // Check if comments are enabled on this post
+      if (!postCheck.rows[0].comments_enabled) {
+        throw new AppError('Комментарии отключены для этого объявления', 403);
       }
 
       // If replying, verify parent exists and belongs to same post
@@ -253,6 +263,11 @@ router.put(
       const { id } = req.params;
       const userId = req.userId!;
       const data = updateCommentSchema.parse(req.body);
+
+      // Check if user is banned from commenting
+      if (req.userBanType) {
+        throw new AppError('Вам запрещено редактировать комментарии', 403);
+      }
 
       // Check ownership
       const ownerCheck = await query<{ user_id: string; status: string }>(

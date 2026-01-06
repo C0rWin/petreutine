@@ -98,3 +98,21 @@ static_sites:
         type: SECRET
     routes:
       - path: /
+
+  # Admin Panel
+  - name: admin
+    github:
+      repo: C0rWin/petreutine
+      branch: main
+      deploy_on_push: true
+    source_dir: admin
+    build_command: npm install && npm run build
+    output_dir: dist
+    index_document: index.html
+    error_document: index.html
+    envs:
+      - key: VITE_API_URL
+        scope: BUILD_TIME
+        value: ${api.PUBLIC_URL}
+    routes:
+      - path: /admin

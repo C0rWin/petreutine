@@ -145,6 +145,12 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       );
       user = updateResult.rows[0];
     } else {
+      // Check if this will be the first user (for auto-admin)
+      const userCountResult = await query<{ count: string }>(
+        'SELECT COUNT(*) as count FROM users'
+      );
+      const isFirstUser = parseInt(userCountResult.rows[0].count, 10) === 0;
+
       // Create new user
       const insertResult = await query<User>(
         `INSERT INTO users (yandex_id, name, email, avatar_url)
@@ -153,6 +159,15 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
         [yandexUser.id, userName, yandexUser.default_email, avatarUrl]
       );
       user = insertResult.rows[0];
+
+      // Auto-grant admin role to first user
+      if (isFirstUser) {
+        await query(
+          `INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')`,
+          [user.id]
+        );
+        console.log(`First user ${user.email} auto-granted admin role`);
+      }
     }
 
     // Generate JWT token
@@ -186,6 +201,12 @@ if (process.env.NODE_ENV !== 'production') {
         throw new AppError('Name and email are required', 400);
       }
 
+      // Check if this will be the first user (for auto-admin)
+      const userCountResult = await query<{ count: string }>(
+        'SELECT COUNT(*) as count FROM users'
+      );
+      const isFirstUser = parseInt(userCountResult.rows[0].count, 10) === 0;
+
       const yandexId = `dev_${Date.now()}`;
 
       const result = await query<User>(
@@ -197,13 +218,22 @@ if (process.env.NODE_ENV !== 'production') {
 
       const user = result.rows[0];
 
+      // Auto-grant admin role to first user
+      if (isFirstUser) {
+        await query(
+          `INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')`,
+          [user.id]
+        );
+        console.log(`First user ${user.email} auto-granted admin role`);
+      }
+
       // Generate token for dev user
       const token = generateToken({
         userId: user.id,
         email: user.email,
       });
 
-      res.status(201).json({ user, token });
+      res.status(201).json({ user, token, isAdmin: isFirstUser });
     } catch (error) {
       next(error);
     }

@@ -12,11 +12,19 @@ export interface JwtPayload {
 }
 
 export type UserRoleType = 'admin' | 'moderator';
+export type BanType = 'full' | 'comment';
+
+export interface UserWithBanInfo extends User {
+  ban_type: BanType | null;
+  ban_reason: string | null;
+  ban_expires_at: Date | null;
+}
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
   userId?: string;
   userRoles?: UserRoleType[];
+  userBanType?: BanType | null;
 }
 
 // Generate JWT token
@@ -31,6 +39,24 @@ export function verifyToken(token: string): JwtPayload | null {
   } catch {
     return null;
   }
+}
+
+// Check if ban has expired and clear it if so
+async function checkAndClearExpiredBan(userId: string, banExpiresAt: Date | null): Promise<boolean> {
+  if (banExpiresAt && new Date(banExpiresAt) < new Date()) {
+    await query(
+      `UPDATE users SET
+        ban_type = NULL,
+        ban_reason = NULL,
+        banned_at = NULL,
+        banned_by = NULL,
+        ban_expires_at = NULL
+       WHERE id = $1`,
+      [userId]
+    );
+    return true; // Ban was cleared
+  }
+  return false;
 }
 
 // Authentication middleware - requires valid token
@@ -55,9 +81,11 @@ export async function requireAuth(
       return;
     }
 
-    // Get user from database
-    const result = await query<User>(
-      'SELECT id, yandex_id, name, email, avatar_url, created_at FROM users WHERE id = $1',
+    // Get user from database with ban info
+    const result = await query<UserWithBanInfo>(
+      `SELECT id, yandex_id, name, email, avatar_url, created_at,
+              ban_type, ban_reason, ban_expires_at
+       FROM users WHERE id = $1`,
       [payload.userId]
     );
 
@@ -66,8 +94,36 @@ export async function requireAuth(
       return;
     }
 
-    req.user = result.rows[0];
+    const user = result.rows[0];
+
+    // Check if user has a full ban
+    if (user.ban_type === 'full') {
+      // Check if ban has expired
+      const banCleared = await checkAndClearExpiredBan(payload.userId, user.ban_expires_at);
+
+      if (!banCleared) {
+        // Still banned
+        const expiresMessage = user.ban_expires_at
+          ? ` до ${new Date(user.ban_expires_at).toLocaleDateString('ru-RU')}`
+          : ' навсегда';
+        res.status(403).json({
+          error: `Ваш аккаунт заблокирован${expiresMessage}`,
+          ban_reason: user.ban_reason,
+          ban_expires_at: user.ban_expires_at,
+        });
+        return;
+      }
+      // Ban was cleared, continue
+      user.ban_type = null;
+    }
+
+    // Update last_login_at (fire and forget, don't wait)
+    query('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1', [payload.userId])
+      .catch(err => console.error('Failed to update last_login_at:', err));
+
+    req.user = user;
     req.userId = payload.userId;
+    req.userBanType = user.ban_type; // Pass ban type for comment restrictions
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

@@ -353,3 +353,136 @@ CREATE TRIGGER trigger_set_comment_path
     BEFORE INSERT ON comments
     FOR EACH ROW
     EXECUTE FUNCTION set_comment_path();
+
+-- ============================================
+-- ADMIN PANEL SYSTEM
+-- ============================================
+
+-- Ban type enum
+DO $$ BEGIN
+    CREATE TYPE ban_type AS ENUM ('full', 'comment');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Add admin-related columns to users table
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS ban_type ban_type;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS ban_reason TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS banned_by UUID REFERENCES users(id);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS ban_expires_at TIMESTAMP WITH TIME ZONE;
+
+CREATE INDEX IF NOT EXISTS idx_users_ban_type ON users(ban_type) WHERE ban_type IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_ban_expires ON users(ban_expires_at) WHERE ban_expires_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_last_login ON users(last_login_at DESC);
+
+-- Add comments_enabled columns to posts table
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS comments_enabled BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS comments_disabled_by UUID REFERENCES users(id);
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS comments_disabled_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS comments_disabled_reason TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_posts_comments_enabled ON posts(comments_enabled) WHERE comments_enabled = FALSE;
+
+-- Ban action type enum
+DO $$ BEGIN
+    CREATE TYPE ban_action AS ENUM ('ban', 'unban', 'modify');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+-- Ban history table
+CREATE TABLE IF NOT EXISTS ban_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    admin_id UUID NOT NULL REFERENCES users(id),
+    action ban_action NOT NULL,
+    ban_type ban_type,
+    reason TEXT,
+    duration_hours INTEGER, -- NULL = permanent
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_ban_history_user_id ON ban_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_ban_history_created_at ON ban_history(created_at DESC);
+
+-- Admin audit log table
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    admin_id UUID NOT NULL REFERENCES users(id),
+    action VARCHAR(50) NOT NULL,
+    target_type VARCHAR(20) NOT NULL, -- 'user', 'post', 'comment'
+    target_id UUID NOT NULL,
+    details JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_audit_log_admin_id ON admin_audit_log(admin_id);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_log_target ON admin_audit_log(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(created_at DESC);
+
+-- Function to check if user ban has expired
+CREATE OR REPLACE FUNCTION is_user_banned(p_user_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+    user_ban_type ban_type;
+    user_ban_expires TIMESTAMP WITH TIME ZONE;
+BEGIN
+    SELECT ban_type, ban_expires_at INTO user_ban_type, user_ban_expires
+    FROM users WHERE id = p_user_id;
+
+    -- No ban
+    IF user_ban_type IS NULL THEN
+        RETURN FALSE;
+    END IF;
+
+    -- Check if ban has expired
+    IF user_ban_expires IS NOT NULL AND user_ban_expires < CURRENT_TIMESTAMP THEN
+        -- Auto-clear expired ban
+        UPDATE users SET
+            ban_type = NULL,
+            ban_reason = NULL,
+            banned_at = NULL,
+            banned_by = NULL,
+            ban_expires_at = NULL
+        WHERE id = p_user_id;
+        RETURN FALSE;
+    END IF;
+
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to check if user can comment (not full banned or comment banned)
+CREATE OR REPLACE FUNCTION can_user_comment(p_user_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+    user_ban_type ban_type;
+    user_ban_expires TIMESTAMP WITH TIME ZONE;
+BEGIN
+    SELECT ban_type, ban_expires_at INTO user_ban_type, user_ban_expires
+    FROM users WHERE id = p_user_id;
+
+    -- No ban
+    IF user_ban_type IS NULL THEN
+        RETURN TRUE;
+    END IF;
+
+    -- Check if ban has expired
+    IF user_ban_expires IS NOT NULL AND user_ban_expires < CURRENT_TIMESTAMP THEN
+        -- Auto-clear expired ban
+        UPDATE users SET
+            ban_type = NULL,
+            ban_reason = NULL,
+            banned_at = NULL,
+            banned_by = NULL,
+            ban_expires_at = NULL
+        WHERE id = p_user_id;
+        RETURN TRUE;
+    END IF;
+
+    -- Both full and comment bans prevent commenting
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql;

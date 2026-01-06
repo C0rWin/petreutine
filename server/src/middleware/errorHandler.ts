@@ -1,5 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { ZodError } from 'zod';
+
+// Wrapper to catch async errors and pass them to error handler
+export function asyncHandler<T extends Request>(
+  fn: (req: T, res: Response, next: NextFunction) => Promise<void>
+): RequestHandler {
+  return (req, res, next) => {
+    Promise.resolve(fn(req as T, res, next)).catch(next);
+  };
+}
 
 export class AppError extends Error {
   statusCode: number;
