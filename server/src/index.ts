@@ -92,6 +92,68 @@ app.get('/internal/db-url', (req, res) => {
   res.json({ database_url: process.env.DATABASE_URL });
 });
 
+// Internal endpoint for resetting the database (protected by ADMIN_API_KEY)
+app.post('/internal/db-reset', async (req, res) => {
+  const adminKey = process.env.ADMIN_API_KEY;
+  const providedKey = req.headers['x-admin-key'];
+  const confirmHeader = req.headers['x-confirm-reset'];
+
+  if (!adminKey) {
+    res.status(503).json({ error: 'ADMIN_API_KEY not configured' });
+    return;
+  }
+
+  if (!providedKey || providedKey !== adminKey) {
+    res.status(401).json({ error: 'Invalid or missing X-Admin-Key header' });
+    return;
+  }
+
+  if (confirmHeader !== 'DELETE ALL DATA') {
+    res.status(400).json({ error: 'Missing X-Confirm-Reset header with value "DELETE ALL DATA"' });
+    return;
+  }
+
+  try {
+    const { Pool } = await import('pg');
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+    await pool.query(`
+      DROP TABLE IF EXISTS admin_audit_log CASCADE;
+      DROP TABLE IF EXISTS ban_history CASCADE;
+      DROP TABLE IF EXISTS notifications CASCADE;
+      DROP TABLE IF EXISTS comment_reports CASCADE;
+      DROP TABLE IF EXISTS comment_votes CASCADE;
+      DROP TABLE IF EXISTS comments CASCADE;
+      DROP TABLE IF EXISTS user_roles CASCADE;
+      DROP TABLE IF EXISTS sessions CASCADE;
+      DROP TABLE IF EXISTS posts CASCADE;
+      DROP TABLE IF EXISTS users CASCADE;
+      DROP TYPE IF EXISTS ban_action CASCADE;
+      DROP TYPE IF EXISTS ban_type CASCADE;
+      DROP TYPE IF EXISTS notification_type CASCADE;
+      DROP TYPE IF EXISTS report_status CASCADE;
+      DROP TYPE IF EXISTS vote_type CASCADE;
+      DROP TYPE IF EXISTS comment_status CASCADE;
+      DROP TYPE IF EXISTS post_status CASCADE;
+      DROP TYPE IF EXISTS animal_type CASCADE;
+      DROP TYPE IF EXISTS post_type CASCADE;
+      DROP FUNCTION IF EXISTS update_updated_at_column CASCADE;
+      DROP FUNCTION IF EXISTS update_reply_count CASCADE;
+      DROP FUNCTION IF EXISTS update_comment_vote_counts CASCADE;
+      DROP FUNCTION IF EXISTS set_comment_path CASCADE;
+      DROP FUNCTION IF EXISTS is_user_banned CASCADE;
+      DROP FUNCTION IF EXISTS can_user_comment CASCADE;
+    `);
+
+    await pool.end();
+
+    res.json({ success: true, message: 'Database reset complete. Restart the app to recreate schema.' });
+  } catch (error) {
+    console.error('Database reset error:', error);
+    res.status(500).json({ error: 'Database reset failed', details: String(error) });
+  }
+});
+
 // Apply rate limiting to API routes
 app.use('/api', apiLimiter);
 app.use(apiLimiter); // Also apply to routes without /api prefix (DO may strip it)
