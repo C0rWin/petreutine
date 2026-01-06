@@ -14,6 +14,7 @@ import {
   unbanUserSchema,
   toggleCommentsSchema,
   deletePostSchema,
+  toggleAdminSchema,
   AdminUserWithStats,
   AdminPostWithStats,
   BanHistoryEntry,
@@ -116,7 +117,8 @@ router.get(
         COALESCE(c.comments_count, 0)::int as comments_count,
         COALESCE(c.flagged_comments_count, 0)::int as flagged_comments_count,
         COALESCE(c.rejected_comments_count, 0)::int as rejected_comments_count,
-        banner.name as banned_by_name
+        banner.name as banned_by_name,
+        EXISTS(SELECT 1 FROM user_roles WHERE user_id = u.id AND role = 'admin') as is_admin
        FROM users u
        LEFT JOIN (
          SELECT user_id, COUNT(*) as posts_count FROM posts GROUP BY user_id
@@ -165,7 +167,8 @@ router.get(
         COALESCE(c.comments_count, 0)::int as comments_count,
         COALESCE(c.flagged_comments_count, 0)::int as flagged_comments_count,
         COALESCE(c.rejected_comments_count, 0)::int as rejected_comments_count,
-        banner.name as banned_by_name
+        banner.name as banned_by_name,
+        EXISTS(SELECT 1 FROM user_roles WHERE user_id = u.id AND role = 'admin') as is_admin
        FROM users u
        LEFT JOIN (
          SELECT user_id, COUNT(*) as posts_count FROM posts GROUP BY user_id
@@ -436,6 +439,78 @@ router.post(
     });
 
     res.json({ success: true, message: 'Пользователь разблокирован' });
+  })
+);
+
+/**
+ * POST /api/admin/users/:id/toggle-admin
+ * Grant or revoke admin role
+ */
+router.post(
+  '/users/:id/toggle-admin',
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const input = toggleAdminSchema.parse(req.body);
+    const adminId = req.userId!;
+
+    // Prevent self-demotion
+    if (id === adminId && !input.is_admin) {
+      throw new AppError('Нельзя снять права администратора с самого себя', 400);
+    }
+
+    // Check if user exists
+    const userCheck = await query<{ id: string; name: string }>(
+      'SELECT id, name FROM users WHERE id = $1',
+      [id]
+    );
+    if (userCheck.rows.length === 0) {
+      throw new AppError('Пользователь не найден', 404);
+    }
+
+    // Check current admin status
+    const adminCheck = await query<{ role: string }>(
+      "SELECT role FROM user_roles WHERE user_id = $1 AND role = 'admin'",
+      [id]
+    );
+    const isCurrentlyAdmin = adminCheck.rows.length > 0;
+
+    if (input.is_admin && isCurrentlyAdmin) {
+      throw new AppError('Пользователь уже является администратором', 400);
+    }
+    if (!input.is_admin && !isCurrentlyAdmin) {
+      throw new AppError('Пользователь не является администратором', 400);
+    }
+
+    if (input.is_admin) {
+      // Grant admin role
+      await query(
+        "INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')",
+        [id]
+      );
+    } else {
+      // Revoke admin role
+      await query(
+        "DELETE FROM user_roles WHERE user_id = $1 AND role = 'admin'",
+        [id]
+      );
+    }
+
+    // Audit log
+    await logAdminAction(
+      adminId,
+      input.is_admin ? 'grant_admin' : 'revoke_admin',
+      AdminTargetType.USER,
+      id,
+      { user_name: userCheck.rows[0].name }
+    );
+
+    res.json({
+      success: true,
+      message: input.is_admin
+        ? 'Права администратора выданы'
+        : 'Права администратора отозваны',
+      is_admin: input.is_admin,
+    });
   })
 );
 

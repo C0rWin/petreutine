@@ -126,6 +126,16 @@ class AdminApi {
     });
   }
 
+  async toggleAdmin(
+    userId: string,
+    isAdmin: boolean
+  ): Promise<ApiResponse<{ success: boolean; message: string; is_admin: boolean }>> {
+    return this.request(`/users/${userId}/toggle-admin`, {
+      method: 'POST',
+      body: JSON.stringify({ is_admin: isAdmin }),
+    });
+  }
+
   // ============================================
   // POST MANAGEMENT
   // ============================================

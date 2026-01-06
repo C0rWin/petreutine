@@ -24,6 +24,7 @@ export interface AdminUserWithStats extends AdminUser {
   flagged_comments_count: number;
   rejected_comments_count: number;
   banned_by_name?: string | null;
+  is_admin: boolean;
 }
 
 // Ban types

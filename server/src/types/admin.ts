@@ -47,6 +47,7 @@ export interface AdminUserWithStats extends AdminUser {
   flagged_comments_count: number;
   rejected_comments_count: number;
   banned_by_name?: string | null;
+  is_admin: boolean;
 }
 
 export interface AdminPost {
@@ -232,6 +233,10 @@ export const deletePostSchema = z.object({
   reason: z.string().min(1, 'Причина удаления обязательна').max(500),
 });
 
+export const toggleAdminSchema = z.object({
+  is_admin: z.boolean(),
+});
+
 // ============================================
 // TYPE INFERENCES
 // ============================================
@@ -246,3 +251,4 @@ export type BanUserInput = z.infer<typeof banUserSchema>;
 export type UnbanUserInput = z.infer<typeof unbanUserSchema>;
 export type ToggleCommentsInput = z.infer<typeof toggleCommentsSchema>;
 export type DeletePostInput = z.infer<typeof deletePostSchema>;
+export type ToggleAdminInput = z.infer<typeof toggleAdminSchema>;

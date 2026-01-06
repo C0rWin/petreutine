@@ -4,7 +4,9 @@
       "Bash(npm test:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(npm run test:coverage:*)"
+      "Bash(npm run test:coverage:*)",
+      "Bash(cat:*)",
+      "Bash(doctl apps get:*)"
     ]
   }
 }

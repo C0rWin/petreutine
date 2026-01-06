@@ -5,7 +5,7 @@ import { AdminUserWithStats } from '../types';
 import { DataTable, Column } from '../components/common/DataTable';
 import { Pagination } from '../components/common/Pagination';
 import { SearchInput } from '../components/common/SearchInput';
-import { getBanStatusBadge } from '../components/common/Badge';
+import { getUserStatusBadges } from '../components/common/Badge';
 import { usePagination } from '../hooks/usePagination';
 import { useDebounce } from '../hooks/useDebounce';
 
@@ -80,8 +80,12 @@ export function UsersPage() {
     {
       key: 'status',
       header: 'Статус',
-      width: '120px',
-      render: (user) => getBanStatusBadge(user.ban_type),
+      width: '180px',
+      render: (user) => (
+        <div className="flex items-center gap-1 flex-wrap">
+          {getUserStatusBadges(user.is_admin, user.ban_type)}
+        </div>
+      ),
     },
     {
       key: 'posts_count',

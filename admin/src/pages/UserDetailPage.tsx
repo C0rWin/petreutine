@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { adminApi } from '../services/api';
 import { AdminUserWithStats, AdminPostWithStats, AdminComment, BanHistoryEntry, BanType } from '../types';
-import { getBanStatusBadge, getPostTypeBadge, getCommentStatusBadge } from '../components/common/Badge';
+import { getUserStatusBadges, getPostTypeBadge, getCommentStatusBadge } from '../components/common/Badge';
 import { DataTable, Column } from '../components/common/DataTable';
 import { Pagination } from '../components/common/Pagination';
 import { ConfirmModal } from '../components/common/ConfirmModal';
@@ -39,7 +39,9 @@ export function UserDetailPage() {
   // Modals
   const [showBanModal, setShowBanModal] = useState(false);
   const [showUnbanModal, setShowUnbanModal] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
   const [isBanLoading, setIsBanLoading] = useState(false);
+  const [isAdminLoading, setIsAdminLoading] = useState(false);
 
   const fetchUser = useCallback(async () => {
     if (!id) return;
@@ -124,6 +126,17 @@ export function UserDetailPage() {
       fetchUser();
       fetchBanHistory();
       setShowUnbanModal(false);
+    }
+  };
+
+  const handleToggleAdmin = async () => {
+    if (!id || !user) return;
+    setIsAdminLoading(true);
+    const result = await adminApi.toggleAdmin(id, !user.is_admin);
+    setIsAdminLoading(false);
+    if (!result.error) {
+      fetchUser();
+      setShowAdminModal(false);
     }
   };
 
@@ -229,7 +242,9 @@ export function UserDetailPage() {
             <div>
               <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-                {getBanStatusBadge(user.ban_type)}
+                <div className="flex items-center gap-2">
+                  {getUserStatusBadges(user.is_admin, user.ban_type)}
+                </div>
               </div>
               <p className="text-gray-500">{user.email}</p>
               {user.ban_type && user.ban_reason && (
@@ -245,6 +260,16 @@ export function UserDetailPage() {
             </div>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setShowAdminModal(true)}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                user.is_admin
+                  ? 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                  : 'text-blue-700 bg-blue-100 hover:bg-blue-200'
+              }`}
+            >
+              {user.is_admin ? 'Снять админа' : 'Сделать админом'}
+            </button>
             {user.ban_type ? (
               <button
                 onClick={() => setShowUnbanModal(true)}
@@ -385,6 +410,21 @@ export function UserDetailPage() {
         confirmText="Разблокировать"
         variant="info"
         isLoading={isBanLoading}
+      />
+
+      <ConfirmModal
+        isOpen={showAdminModal}
+        onClose={() => setShowAdminModal(false)}
+        onConfirm={handleToggleAdmin}
+        title={user.is_admin ? 'Снять права администратора' : 'Назначить администратором'}
+        message={
+          user.is_admin
+            ? `Вы уверены, что хотите снять права администратора с пользователя ${user.name}?`
+            : `Вы уверены, что хотите назначить пользователя ${user.name} администратором?`
+        }
+        confirmText={user.is_admin ? 'Снять права' : 'Назначить'}
+        variant={user.is_admin ? 'danger' : 'info'}
+        isLoading={isAdminLoading}
       />
     </div>
   );
