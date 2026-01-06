@@ -50,9 +50,11 @@ router.get('/yandex', (req: Request, res: Response) => {
 
   // Get optional redirect target (simple identifier like 'admin')
   const redirectTo = req.query.redirect_to as string | undefined;
+  console.log('OAuth init - redirect_to:', redirectTo);
 
   // Use simple state identifier for admin redirect
   const state = redirectTo === 'admin' ? 'admin' : '';
+  console.log('OAuth init - state:', state);
 
   const params = new URLSearchParams({
     response_type: 'code',
@@ -65,17 +67,22 @@ router.get('/yandex', (req: Request, res: Response) => {
     params.set('state', state);
   }
 
-  res.redirect(`${YANDEX_AUTH_URL}?${params.toString()}`);
+  const redirectUrl = `${YANDEX_AUTH_URL}?${params.toString()}`;
+  console.log('OAuth init - redirecting to:', redirectUrl);
+  res.redirect(redirectUrl);
 });
 
 // Handle Yandex OAuth callback
 router.get('/yandex/callback', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { code, error, state } = req.query;
+    console.log('OAuth callback - state:', state, 'type:', typeof state);
+    console.log('OAuth callback - FRONTEND_URL:', FRONTEND_URL);
 
     // Determine redirect URL based on state parameter
     const isAdminRedirect = state === 'admin';
     const redirectUrl = isAdminRedirect ? `${FRONTEND_URL}/admin/login` : FRONTEND_URL;
+    console.log('OAuth callback - isAdminRedirect:', isAdminRedirect, 'redirectUrl:', redirectUrl);
 
     if (error) {
       console.error('Yandex OAuth error:', error);
