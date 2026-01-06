@@ -38,7 +38,7 @@ export function LoginPage() {
 
   const handleYandexLogin = () => {
     // Redirect to main app's Yandex OAuth with redirect back to admin
-    const adminUrl = window.location.origin + '/login';
+    const adminUrl = window.location.origin + '/admin/login';
     window.location.href = `/api/auth/yandex?redirect_to=${encodeURIComponent(adminUrl)}`;
   };
 

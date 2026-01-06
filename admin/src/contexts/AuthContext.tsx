@@ -31,8 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      const data = await response.json();
-      setUser(data.user);
+      const userData = await response.json();
+      setUser(userData);
 
       // Check if user has admin role
       const rolesResponse = await fetch('/api/admin/stats/overview', {
