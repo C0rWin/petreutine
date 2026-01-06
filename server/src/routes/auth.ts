@@ -42,17 +42,24 @@ router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) 
 });
 
 // Initiate Yandex OAuth flow
-router.get('/yandex', (_req: Request, res: Response) => {
+router.get('/yandex', (req: Request, res: Response) => {
   if (!YANDEX_CLIENT_ID) {
     res.status(500).json({ error: 'Yandex OAuth не настроен' });
     return;
   }
+
+  // Get optional redirect URL (for admin panel)
+  const redirectTo = req.query.redirect_to as string | undefined;
+
+  // Encode redirect URL in state parameter to pass through OAuth flow
+  const state = redirectTo ? Buffer.from(redirectTo).toString('base64') : '';
 
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: YANDEX_CLIENT_ID,
     redirect_uri: YANDEX_REDIRECT_URI,
     scope: 'login:email login:info login:avatar',
+    ...(state && { state }),
   });
 
   res.redirect(`${YANDEX_AUTH_URL}?${params.toString()}`);
@@ -61,7 +68,21 @@ router.get('/yandex', (_req: Request, res: Response) => {
 // Handle Yandex OAuth callback
 router.get('/yandex/callback', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { code, error } = req.query;
+    const { code, error, state } = req.query;
+
+    // Decode redirect URL from state parameter
+    let redirectUrl = FRONTEND_URL;
+    if (state && typeof state === 'string') {
+      try {
+        const decoded = Buffer.from(state, 'base64').toString('utf-8');
+        // Validate it's a valid URL on the same domain or relative path
+        if (decoded.startsWith('/') || decoded.startsWith(FRONTEND_URL)) {
+          redirectUrl = decoded.startsWith('/') ? `${FRONTEND_URL}${decoded}` : decoded;
+        }
+      } catch {
+        // Invalid state, use default
+      }
+    }
 
     if (error) {
       console.error('Yandex OAuth error:', error);
@@ -176,8 +197,9 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       email: user.email,
     });
 
-    // Redirect to frontend with token (use root path for SPA compatibility)
-    res.redirect(`${FRONTEND_URL}/?token=${token}`);
+    // Redirect to the appropriate URL with token
+    const separator = redirectUrl.includes('?') ? '&' : '?';
+    res.redirect(`${redirectUrl}${separator}token=${token}`);
   } catch (error) {
     console.error('Yandex OAuth callback error:', error);
     next(error);
