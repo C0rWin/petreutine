@@ -48,19 +48,22 @@ router.get('/yandex', (req: Request, res: Response) => {
     return;
   }
 
-  // Get optional redirect URL (for admin panel)
+  // Get optional redirect target (simple identifier like 'admin')
   const redirectTo = req.query.redirect_to as string | undefined;
 
-  // Encode redirect URL in state parameter to pass through OAuth flow
-  const state = redirectTo ? Buffer.from(redirectTo).toString('base64') : '';
+  // Use simple state identifier for admin redirect
+  const state = redirectTo === 'admin' ? 'admin' : '';
 
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: YANDEX_CLIENT_ID,
     redirect_uri: YANDEX_REDIRECT_URI,
     scope: 'login:email login:info login:avatar',
-    ...(state && { state }),
   });
+
+  if (state) {
+    params.set('state', state);
+  }
 
   res.redirect(`${YANDEX_AUTH_URL}?${params.toString()}`);
 });
@@ -70,19 +73,9 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
   try {
     const { code, error, state } = req.query;
 
-    // Decode redirect URL from state parameter
-    let redirectUrl = FRONTEND_URL;
-    if (state && typeof state === 'string') {
-      try {
-        const decoded = Buffer.from(state, 'base64').toString('utf-8');
-        // Validate it's a valid URL on the same domain or relative path
-        if (decoded.startsWith('/') || decoded.startsWith(FRONTEND_URL)) {
-          redirectUrl = decoded.startsWith('/') ? `${FRONTEND_URL}${decoded}` : decoded;
-        }
-      } catch {
-        // Invalid state, use default
-      }
-    }
+    // Determine redirect URL based on state parameter
+    const isAdminRedirect = state === 'admin';
+    const redirectUrl = isAdminRedirect ? `${FRONTEND_URL}/admin/login` : FRONTEND_URL;
 
     if (error) {
       console.error('Yandex OAuth error:', error);
