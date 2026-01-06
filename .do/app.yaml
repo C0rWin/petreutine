@@ -24,6 +24,7 @@ services:
     routes:
       - path: /api
       - path: /health
+      - path: /internal
     envs:
       - key: NODE_ENV
         value: production
@@ -72,6 +73,9 @@ services:
       - key: DO_SPACES_CDN_URL
         scope: RUN_TIME
         value: https://petreunite.fra1.cdn.digitaloceanspaces.com
+      - key: ADMIN_API_KEY
+        scope: RUN_TIME
+        type: SECRET
     health_check:
       http_path: /health
       initial_delay_seconds: 10

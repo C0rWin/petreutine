@@ -155,14 +155,16 @@ db-connect: ## Connect to database via psql (requires DATABASE_URL)
 	psql "$(DATABASE_URL)"
 
 .PHONY: db-url
-db-url: ## Show how to get database URL
-	@echo "$(YELLOW)To get the DATABASE_URL:$(NC)"
-	@echo "1. Go to https://cloud.digitalocean.com/apps"
-	@echo "2. Click on $(APP_NAME)"
-	@echo "3. Go to Settings -> Components -> petreunite-db"
-	@echo "4. Copy the Connection String"
-	@echo ""
-	@echo "Or use: doctl databases connection <db-id> --format URI"
+db-url: ## Get database URL via API (requires ADMIN_API_KEY)
+	@if [ -z "$(ADMIN_API_KEY)" ]; then \
+		echo "$(RED)Error: ADMIN_API_KEY not set$(NC)"; \
+		echo "Usage: ADMIN_API_KEY=your_key make db-url"; \
+		echo ""; \
+		echo "Set ADMIN_API_KEY in DO Dashboard -> Apps -> $(APP_NAME) -> Settings -> api component"; \
+		exit 1; \
+	fi
+	@URL=$$(doctl apps list --format DefaultIngress,Spec.Name --no-header | grep $(APP_NAME) | awk '{print $$1}') && \
+		curl -s "https://$$URL/internal/db-url" -H "X-Admin-Key: $(ADMIN_API_KEY)" | jq -r '.database_url'
 
 .PHONY: db-migrate
 db-migrate: ## Run database migrations locally
@@ -172,6 +174,62 @@ db-migrate: ## Run database migrations locally
 .PHONY: db-pool
 db-pool: ## Show database pool info
 	doctl databases pool list $$(doctl databases list --format ID --no-header | head -1) 2>/dev/null || echo "No connection pools configured"
+
+.PHONY: db-reset
+db-reset: ## Reset database (DROP ALL tables and types) - DANGEROUS!
+	@echo "$(RED)WARNING: This will DELETE ALL DATA in the database!$(NC)"
+	@echo "$(RED)All tables, types, and data will be permanently lost.$(NC)"
+	@read -p "Are you sure? Type 'DELETE ALL DATA' to confirm: " confirm && [ "$$confirm" = "DELETE ALL DATA" ]
+	$(eval DB_URL := $(if $(DATABASE_URL),$(DATABASE_URL),$(shell \
+		if [ -n "$(ADMIN_API_KEY)" ]; then \
+			URL=$$(doctl apps list --format DefaultIngress,Spec.Name --no-header | grep $(APP_NAME) | awk '{print $$1}'); \
+			curl -s "https://$$URL/internal/db-url" -H "X-Admin-Key: $(ADMIN_API_KEY)" | jq -r '.database_url'; \
+		fi \
+	)))
+	@if [ -z "$(DB_URL)" ]; then \
+		echo "$(RED)Error: DATABASE_URL not set$(NC)"; \
+		echo "Usage: DATABASE_URL=postgres://... make db-reset"; \
+		echo "   or: ADMIN_API_KEY=your_key make db-reset"; \
+		echo ""; \
+		echo "Get your DATABASE_URL from:"; \
+		echo "  1. ADMIN_API_KEY=key make db-url"; \
+		echo "  2. DO Dashboard -> Apps -> $(APP_NAME) -> Settings -> petreunite-db"; \
+		exit 1; \
+	fi
+	@echo "$(YELLOW)Dropping all tables and types...$(NC)"
+	@psql "$(DB_URL)" -c "\
+		DROP TABLE IF EXISTS admin_audit_log CASCADE; \
+		DROP TABLE IF EXISTS ban_history CASCADE; \
+		DROP TABLE IF EXISTS notifications CASCADE; \
+		DROP TABLE IF EXISTS comment_reports CASCADE; \
+		DROP TABLE IF EXISTS comment_votes CASCADE; \
+		DROP TABLE IF EXISTS comments CASCADE; \
+		DROP TABLE IF EXISTS user_roles CASCADE; \
+		DROP TABLE IF EXISTS sessions CASCADE; \
+		DROP TABLE IF EXISTS posts CASCADE; \
+		DROP TABLE IF EXISTS users CASCADE; \
+		DROP TYPE IF EXISTS ban_action CASCADE; \
+		DROP TYPE IF EXISTS ban_type CASCADE; \
+		DROP TYPE IF EXISTS notification_type CASCADE; \
+		DROP TYPE IF EXISTS report_status CASCADE; \
+		DROP TYPE IF EXISTS vote_type CASCADE; \
+		DROP TYPE IF EXISTS comment_status CASCADE; \
+		DROP TYPE IF EXISTS post_status CASCADE; \
+		DROP TYPE IF EXISTS animal_type CASCADE; \
+		DROP TYPE IF EXISTS post_type CASCADE; \
+		DROP FUNCTION IF EXISTS update_updated_at_column CASCADE; \
+		DROP FUNCTION IF EXISTS update_reply_count CASCADE; \
+		DROP FUNCTION IF EXISTS update_comment_vote_counts CASCADE; \
+		DROP FUNCTION IF EXISTS set_comment_path CASCADE; \
+		DROP FUNCTION IF EXISTS is_user_banned CASCADE; \
+		DROP FUNCTION IF EXISTS can_user_comment CASCADE; \
+	"
+	@echo "$(GREEN)Database reset complete!$(NC)"
+	@echo "$(YELLOW)Run 'make redeploy' to recreate schema via AUTO_MIGRATE$(NC)"
+
+.PHONY: db-reset-and-redeploy
+db-reset-and-redeploy: db-reset redeploy ## Reset database and redeploy (recreates schema)
+	@echo "$(GREEN)Database reset and redeploy complete!$(NC)"
 
 # ============================================
 # Secrets Management

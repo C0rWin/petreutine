@@ -74,6 +74,24 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Internal endpoint for getting DATABASE_URL (protected by ADMIN_API_KEY)
+app.get('/internal/db-url', (req, res) => {
+  const adminKey = process.env.ADMIN_API_KEY;
+  const providedKey = req.headers['x-admin-key'];
+
+  if (!adminKey) {
+    res.status(503).json({ error: 'ADMIN_API_KEY not configured' });
+    return;
+  }
+
+  if (!providedKey || providedKey !== adminKey) {
+    res.status(401).json({ error: 'Invalid or missing X-Admin-Key header' });
+    return;
+  }
+
+  res.json({ database_url: process.env.DATABASE_URL });
+});
+
 // Apply rate limiting to API routes
 app.use('/api', apiLimiter);
 app.use(apiLimiter); // Also apply to routes without /api prefix (DO may strip it)
