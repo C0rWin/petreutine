@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import { query } from '../db/index.js';
 import { User } from '../types/index.js';
 import { AppError } from '../middleware/errorHandler.js';
@@ -36,13 +37,60 @@ interface YandexUserInfo {
   is_avatar_empty?: boolean;
 }
 
+// Whitelist of allowed redirect targets to prevent open redirect attacks
+const ALLOWED_REDIRECTS = ['admin', 'profile'];
+
+// Generate cryptographically secure OAuth state token
+async function createOAuthState(redirectTo?: string): Promise<string> {
+  const stateToken = crypto.randomBytes(32).toString('hex'); // 64 char hex string
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  await query(
+    `INSERT INTO oauth_states (state_token, redirect_to, expires_at)
+     VALUES ($1, $2, $3)`,
+    [stateToken, redirectTo || null, expiresAt]
+  );
+
+  return stateToken;
+}
+
+// Validate and consume OAuth state (single-use, atomic)
+async function validateAndConsumeOAuthState(stateToken: string): Promise<{ valid: boolean; redirectTo: string | null }> {
+  // Atomic: DELETE and return in one operation (prevents race conditions)
+  const result = await query<{ redirect_to: string | null }>(
+    `DELETE FROM oauth_states
+     WHERE state_token = $1 AND expires_at > CURRENT_TIMESTAMP
+     RETURNING redirect_to`,
+    [stateToken]
+  );
+
+  if (result.rows.length === 0) {
+    return { valid: false, redirectTo: null };
+  }
+
+  return { valid: true, redirectTo: result.rows[0].redirect_to };
+}
+
+// Cleanup expired states (call on server startup and periodically)
+async function cleanupExpiredOAuthStates(): Promise<void> {
+  try {
+    await query('SELECT cleanup_expired_oauth_states()');
+  } catch (error) {
+    console.error('Failed to cleanup expired OAuth states:', error);
+  }
+}
+
+// Run cleanup on module load and every 5 minutes
+cleanupExpiredOAuthStates();
+setInterval(cleanupExpiredOAuthStates, 5 * 60 * 1000);
+
 // Get current authenticated user
 router.get('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   res.json(req.user);
 });
 
 // Initiate Yandex OAuth flow
-router.get('/yandex', (req: Request, res: Response) => {
+router.get('/yandex', async (req: Request, res: Response) => {
   if (!YANDEX_CLIENT_ID) {
     res.status(500).json({ error: 'Yandex OAuth не настроен' });
     return;
@@ -51,19 +99,19 @@ router.get('/yandex', (req: Request, res: Response) => {
   // Get optional redirect target (simple identifier like 'admin')
   const redirectTo = req.query.redirect_to as string | undefined;
 
-  // Use simple state identifier for admin redirect
-  const state = redirectTo === 'admin' ? 'admin' : '';
+  // Validate redirectTo to prevent open redirect attacks
+  const safeRedirectTo = ALLOWED_REDIRECTS.includes(redirectTo || '') ? redirectTo : undefined;
+
+  // Generate cryptographically secure state token
+  const state = await createOAuthState(safeRedirectTo);
 
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: YANDEX_CLIENT_ID,
     redirect_uri: YANDEX_REDIRECT_URI,
     scope: 'login:email login:info login:avatar',
+    state,
   });
-
-  if (state) {
-    params.set('state', state);
-  }
 
   res.redirect(`${YANDEX_AUTH_URL}?${params.toString()}`);
 });
@@ -72,10 +120,6 @@ router.get('/yandex', (req: Request, res: Response) => {
 router.get('/yandex/callback', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { code, error, state } = req.query;
-
-    // Determine redirect URL based on state parameter
-    const isAdminRedirect = state === 'admin';
-    const redirectUrl = isAdminRedirect ? `${FRONTEND_URL}/admin/login` : FRONTEND_URL;
 
     if (error) {
       console.error('Yandex OAuth error:', error);
@@ -87,6 +131,25 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       res.redirect(`${FRONTEND_URL}?error=no_code`);
       return;
     }
+
+    // Validate state parameter (CSRF protection)
+    if (!state || typeof state !== 'string') {
+      console.error('OAuth callback missing state parameter');
+      res.redirect(`${FRONTEND_URL}?error=invalid_state`);
+      return;
+    }
+
+    const stateValidation = await validateAndConsumeOAuthState(state);
+    if (!stateValidation.valid) {
+      console.error('OAuth state validation failed - invalid or expired token');
+      res.redirect(`${FRONTEND_URL}?error=invalid_state`);
+      return;
+    }
+
+    // Determine redirect URL based on validated state
+    const redirectUrl = stateValidation.redirectTo === 'admin'
+      ? `${FRONTEND_URL}/admin/login`
+      : FRONTEND_URL;
 
     // Exchange code for access token
     const tokenResponse = await fetch(YANDEX_TOKEN_URL, {
