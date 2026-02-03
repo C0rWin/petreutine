@@ -486,3 +486,31 @@ BEGIN
     RETURN FALSE;
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================
+-- OAUTH STATE STORAGE
+-- ============================================
+
+-- OAuth states table for CSRF protection
+CREATE TABLE IF NOT EXISTS oauth_states (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    state_token VARCHAR(64) NOT NULL UNIQUE,
+    redirect_to VARCHAR(50),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_states_token ON oauth_states(state_token);
+CREATE INDEX IF NOT EXISTS idx_oauth_states_expires ON oauth_states(expires_at);
+
+-- Function to clean up expired OAuth states (call periodically)
+CREATE OR REPLACE FUNCTION cleanup_expired_oauth_states()
+RETURNS INTEGER AS $$
+DECLARE
+    deleted_count INTEGER;
+BEGIN
+    DELETE FROM oauth_states WHERE expires_at < CURRENT_TIMESTAMP;
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    RETURN deleted_count;
+END;
+$$ LANGUAGE plpgsql;
