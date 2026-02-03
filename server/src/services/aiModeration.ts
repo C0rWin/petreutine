@@ -3,7 +3,99 @@ import {
   AIModerationResult,
   ModerationDecision,
   CommentStatus,
+  NotificationType,
 } from '../types/comments.js';
+import { query } from '../db/index.js';
+
+// ============================================
+// LOGGING INFRASTRUCTURE
+// ============================================
+
+export enum LogSeverity {
+  ERROR = 'ERROR',
+  WARN = 'WARN',
+  INFO = 'INFO',
+}
+
+interface ModerationLogContext {
+  commentId?: string;
+  content: string;
+  score?: number;
+  error?: string;
+}
+
+function logModerationEvent(
+  severity: LogSeverity,
+  message: string,
+  context: ModerationLogContext
+): void {
+  const prefix = `[AI_MOD_${severity}]`;
+  const timestamp = new Date().toISOString();
+  // Include full content for debugging - do NOT truncate
+  console.log(`${prefix} ${timestamp} ${message}`, JSON.stringify(context, null, 2));
+}
+
+// ============================================
+// ADMIN NOTIFICATION
+// ============================================
+
+async function notifyAdminsOfModerationFailure(
+  commentId: string | undefined,
+  error: string,
+  content: string
+): Promise<void> {
+  try {
+    // Get all admin user IDs
+    const admins = await query<{ user_id: string }>(
+      `SELECT user_id FROM user_roles WHERE role = 'admin'`
+    );
+
+    // Create notification for each admin with full INSERT query
+    for (const admin of admins.rows) {
+      await query(
+        `INSERT INTO notifications (
+          id,
+          user_id,
+          type,
+          title,
+          message,
+          related_comment_id,
+          is_read,
+          created_at
+        ) VALUES (
+          gen_random_uuid(),
+          $1,
+          $2::notification_type,
+          $3,
+          $4,
+          $5,
+          false,
+          NOW()
+        )`,
+        [
+          admin.user_id,
+          NotificationType.MODERATION_ALERT,
+          'AI Moderation Failure',
+          `AI moderation failed: ${error}. Content requires manual review.`,
+          commentId || null,
+        ]
+      );
+    }
+
+    logModerationEvent(LogSeverity.INFO, `Notified ${admins.rows.length} admins of moderation failure`, {
+      commentId,
+      content,
+      error,
+    });
+  } catch (notifyError) {
+    // Log but don't fail if notification fails
+    console.error('[AI_MOD_ERROR] Failed to notify admins:', notifyError);
+  }
+}
+
+// ============================================
+// ANTHROPIC CLIENT
+// ============================================
 
 // Initialize Anthropic client (uses ANTHROPIC_API_KEY env var by default)
 let anthropic: Anthropic | null = null;
@@ -32,7 +124,9 @@ const AUTO_REJECT_THRESHOLD = parseFloat(process.env.AI_AUTO_REJECT_THRESHOLD ||
 export async function moderateContent(content: string): Promise<AIModerationResult> {
   // Skip AI moderation if no API key is configured
   if (!process.env.ANTHROPIC_API_KEY) {
-    console.log('[AI Moderation] Skipped - no API key configured');
+    logModerationEvent(LogSeverity.INFO, 'Skipped - no API key configured', {
+      content: content,
+    });
     return {
       score: 0.75, // Default to pending review
       reason: 'Автоматическая модерация отключена',
@@ -100,15 +194,17 @@ RESPOND IN VALID JSON FORMAT ONLY (no markdown, no backticks):
       // Validate score is within range
       result.score = Math.max(0, Math.min(1, result.score));
 
-      console.log('[AI Moderation]', {
-        content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
+      logModerationEvent(LogSeverity.INFO, 'AI moderation succeeded', {
+        content: content,
         score: result.score,
-        categories: result.categories,
       });
 
       return result;
     } catch (parseError) {
-      console.error('[AI Moderation] Failed to parse response:', responseText);
+      logModerationEvent(LogSeverity.WARN, 'Failed to parse AI response', {
+        content: content,
+        error: responseText,
+      });
       // Return moderate score on parse error
       return {
         score: 0.5,
@@ -122,7 +218,13 @@ RESPOND IN VALID JSON FORMAT ONLY (no markdown, no backticks):
       };
     }
   } catch (error) {
-    console.error('[AI Moderation] API error:', error);
+    logModerationEvent(LogSeverity.ERROR, 'AI moderation API error', {
+      content: content,
+      error: String(error),
+    });
+
+    // CRITICAL: Notify admins for ERROR severity
+    await notifyAdminsOfModerationFailure(undefined, String(error), content);
 
     // On API error, default to pending review
     return {
@@ -216,4 +318,26 @@ export function quickSafetyCheck(content: string): boolean {
   }
 
   return false;
+}
+
+/**
+ * Moderates content with context (commentId) for traceability
+ * Use this when you have a commentId available
+ */
+export async function moderateContentWithContext(
+  content: string,
+  commentId: string
+): Promise<AIModerationResult> {
+  const result = await moderateContent(content);
+
+  // Log with commentId for traceability on low scores
+  if (result.score < 0.5) {
+    logModerationEvent(LogSeverity.WARN, 'Low moderation score', {
+      commentId,
+      content,
+      score: result.score,
+    });
+  }
+
+  return result;
 }
