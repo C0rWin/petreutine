@@ -142,7 +142,8 @@ DO $$ BEGIN
         'post_comment',
         'comment_upvote',
         'moderation_approved',
-        'moderation_rejected'
+        'moderation_rejected',
+        'moderation_alert'
     );
 EXCEPTION
     WHEN duplicate_object THEN null;

@@ -37,6 +37,7 @@ export enum NotificationType {
   COMMENT_UPVOTE = 'comment_upvote',
   MODERATION_APPROVED = 'moderation_approved',
   MODERATION_REJECTED = 'moderation_rejected',
+  MODERATION_ALERT = 'moderation_alert',  // AI moderation failure alerts for admins
 }
 
 // ============================================
