@@ -1,7 +1,8 @@
 import { Response, NextFunction } from 'express';
 import { query } from '../db/index.js';
 import { AppError } from './errorHandler.js';
-import { AuthenticatedRequest, UserRoleType } from './auth.js';
+import { AuthenticatedRequest } from './auth.js';
+import type { UserRoleType } from './auth.js';
 
 // Cache for user roles (simple in-memory, clears on restart)
 const roleCache = new Map<string, { roles: UserRoleType[]; cachedAt: number }>();
