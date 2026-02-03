@@ -8,21 +8,48 @@ const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Database connection configuration
-// Digital Ocean managed databases use self-signed certificates
-const sslConfig = process.env.NODE_ENV === 'production'
-  ? {
-      rejectUnauthorized: false,
-      // DO managed databases require SSL but use self-signed certs
+// Database SSL configuration
+// Production: Strict validation with CA certificate
+// Development: Relaxed for local databases, strict for remote
+function getSSLConfig(): boolean | { rejectUnauthorized: boolean; ca?: string } {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isLocalDev = process.env.DATABASE_URL?.includes('localhost') ||
+                     process.env.DATABASE_URL?.includes('127.0.0.1');
+
+  if (isProduction) {
+    // Production requires proper SSL verification
+    const caCert = process.env.DATABASE_CA_CERT;
+    if (!caCert) {
+      console.error('FATAL: DATABASE_CA_CERT environment variable is required in production');
+      console.error('Get your CA certificate from DigitalOcean Database dashboard');
+      process.exit(1);
     }
-  : false;
+    return {
+      rejectUnauthorized: true,
+      ca: caCert,
+    };
+  }
+
+  if (isLocalDev) {
+    // Local development: no SSL needed
+    return false;
+  }
+
+  // Non-local development (e.g., connecting to staging DB)
+  // Allow self-signed certs but warn
+  console.warn('WARNING: Using relaxed SSL validation for non-production remote database');
+  console.warn('Set DATABASE_CA_CERT for proper certificate validation');
+  return { rejectUnauthorized: false };
+}
+
+const sslConfig = getSSLConfig();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: sslConfig,
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000, // Increased for initial connection
+  connectionTimeoutMillis: 10000,
 });
 
 // Test database connection
