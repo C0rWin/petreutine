@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { initializeDatabase } from './db/index.js';
+import pool, { initializeDatabase } from './db/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import {
   apiLimiter,
@@ -74,8 +74,8 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Internal endpoint for getting DATABASE_URL (protected by ADMIN_API_KEY)
-app.get('/internal/db-url', (req, res) => {
+// Internal endpoint for database connection status (protected by ADMIN_API_KEY)
+app.get('/internal/db-url', async (req, res) => {
   const adminKey = process.env.ADMIN_API_KEY;
   const providedKey = req.headers['x-admin-key'];
 
@@ -89,7 +89,29 @@ app.get('/internal/db-url', (req, res) => {
     return;
   }
 
-  res.json({ database_url: process.env.DATABASE_URL });
+  try {
+    // Measure query latency
+    const start = Date.now();
+    await pool.query('SELECT 1');
+    const latencyMs = Date.now() - start;
+
+    res.json({
+      status: 'connected',
+      pool: {
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount,
+      },
+      latency_ms: latencyMs,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'disconnected',
+      error: 'Database connection failed',
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Internal endpoint for resetting the database (protected by ADMIN_API_KEY)
