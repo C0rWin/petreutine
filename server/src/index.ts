@@ -21,6 +21,7 @@ import commentsRouter from './routes/comments.js';
 import notificationsRouter from './routes/notifications.js';
 import moderationRouter from './routes/moderation.js';
 import adminRouter from './routes/admin/index.js';
+import { registerEventHandlers } from './services/events.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -210,6 +211,9 @@ async function start() {
     if (process.env.AUTO_MIGRATE === 'true') {
       await initializeDatabase();
     }
+
+    // Register event handlers
+    await registerEventHandlers();
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

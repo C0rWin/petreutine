@@ -14,7 +14,7 @@ import {
 import { AppError } from '../middleware/errorHandler.js';
 import { requireAuth, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { moderateContent, getModerationDecision } from '../services/aiModeration.js';
-import { createCommentNotification } from '../services/notifications.js';
+import { eventBus } from '../services/events.js';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -221,10 +221,14 @@ router.post(
 
       const comment = result.rows[0];
 
-      // Create notifications if comment is approved
+      // Emit event for notifications if comment is approved
       if (decision.status === CommentStatus.APPROVED) {
         const postOwnerId = postCheck.rows[0].user_id;
-        await createCommentNotification(comment, userId, postOwnerId);
+        eventBus.emit('comment.created', {
+          comment,
+          authorId: userId,
+          postOwnerId,
+        });
       }
 
       // Return different response based on moderation status
@@ -362,8 +366,8 @@ router.post(
       const { vote_type } = voteSchema.parse(req.body);
 
       // Check comment exists and is approved
-      const commentCheck = await query<{ status: string }>(
-        'SELECT status FROM comments WHERE id = $1 AND deleted_at IS NULL',
+      const commentCheck = await query<{ status: string; user_id: string }>(
+        'SELECT status, user_id FROM comments WHERE id = $1 AND deleted_at IS NULL',
         [id]
       );
       if (commentCheck.rows.length === 0) {
@@ -372,6 +376,8 @@ router.post(
       if (commentCheck.rows[0].status !== 'approved') {
         throw new AppError('Нельзя голосовать за этот комментарий', 400);
       }
+
+      const commentAuthorId = commentCheck.rows[0].user_id;
 
       // Upsert vote
       await query(
@@ -383,6 +389,14 @@ router.post(
         `,
         [id, userId, vote_type]
       );
+
+      // Emit event for notifications
+      eventBus.emit('comment.voted', {
+        commentId: id,
+        commentAuthorId,
+        voterId: userId,
+        voteType: vote_type,
+      });
 
       // Get updated vote counts
       const result = await query<{ upvotes: number; downvotes: number; score: number }>(
