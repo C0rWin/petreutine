@@ -789,26 +789,28 @@ router.get(
     `);
 
     // Users by day
-    const usersByDay = await query<{ date: string; count: number }>(`
-      SELECT
+    const usersByDay = await query<{ date: string; count: number }>(
+      `SELECT
         DATE(created_at)::text as date,
         COUNT(*)::int as count
       FROM users
-      WHERE created_at >= CURRENT_DATE - INTERVAL '${params.days} days'
+      WHERE created_at >= CURRENT_DATE - INTERVAL '1 day' * $1
       GROUP BY DATE(created_at)
-      ORDER BY date
-    `);
+      ORDER BY date`,
+      [params.days]
+    );
 
     // Active users by day
-    const activeUsersByDay = await query<{ date: string; count: number }>(`
-      SELECT
+    const activeUsersByDay = await query<{ date: string; count: number }>(
+      `SELECT
         DATE(last_login_at)::text as date,
         COUNT(*)::int as count
       FROM users
-      WHERE last_login_at >= CURRENT_DATE - INTERVAL '${params.days} days'
+      WHERE last_login_at >= CURRENT_DATE - INTERVAL '1 day' * $1
       GROUP BY DATE(last_login_at)
-      ORDER BY date
-    `);
+      ORDER BY date`,
+      [params.days]
+    );
 
     // Top posters
     const topPosters = await query<{
@@ -883,15 +885,16 @@ router.get(
     `);
 
     // Posts by day
-    const postsByDay = await query<{ date: string; count: number }>(`
-      SELECT
+    const postsByDay = await query<{ date: string; count: number }>(
+      `SELECT
         DATE(created_at)::text as date,
         COUNT(*)::int as count
       FROM posts
-      WHERE created_at >= CURRENT_DATE - INTERVAL '${params.days} days'
+      WHERE created_at >= CURRENT_DATE - INTERVAL '1 day' * $1
       GROUP BY DATE(created_at)
-      ORDER BY date
-    `);
+      ORDER BY date`,
+      [params.days]
+    );
 
     // Posts by animal type
     const postsByAnimalType = await query<{ animal_type: string; count: number }>(`
@@ -965,15 +968,16 @@ router.get(
     `);
 
     // Comments by day
-    const commentsByDay = await query<{ date: string; count: number }>(`
-      SELECT
+    const commentsByDay = await query<{ date: string; count: number }>(
+      `SELECT
         DATE(created_at)::text as date,
         COUNT(*)::int as count
       FROM comments
-      WHERE created_at >= CURRENT_DATE - INTERVAL '${params.days} days'
+      WHERE created_at >= CURRENT_DATE - INTERVAL '1 day' * $1
       GROUP BY DATE(created_at)
-      ORDER BY date
-    `);
+      ORDER BY date`,
+      [params.days]
+    );
 
     // Auto-approval and manual review rates
     const moderationRates = await query<{
