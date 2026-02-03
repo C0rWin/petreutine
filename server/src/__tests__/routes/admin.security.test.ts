@@ -52,8 +52,8 @@ jest.unstable_mockModule('../../middleware/security.js', () => ({
 }));
 
 // Import after mocks are set up
-const adminModule = await import('../../routes/admin.js');
-const adminRouter = adminModule.default;
+const statsModule = await import('../../routes/admin/stats.js');
+const statsRouter = statsModule.default;
 
 // Helper to execute route handler directly
 const executeHandler = async (
@@ -64,10 +64,12 @@ const executeHandler = async (
   next: any
 ) => {
   // Find the handler from the router's stack
-  const layer = (adminRouter as any).stack.find((l: any) => {
-    const routePath = l.route?.path;
+  // Stats router paths are relative (e.g., '/users' not '/stats/users')
+  const routePath = path.replace('/stats', '');
+  const layer = (statsRouter as any).stack.find((l: any) => {
+    const layerPath = l.route?.path;
     const routeMethod = l.route?.methods?.[method];
-    return routePath === path && routeMethod;
+    return layerPath === routePath && routeMethod;
   });
 
   if (!layer) {
@@ -198,7 +200,7 @@ describe('Admin Stats SQL Injection Prevention', () => {
   });
 
   describe('Parameterized Query Verification', () => {
-    it('should verify admin.ts uses parameterized queries for all INTERVAL clauses', async () => {
+    it('should verify stats.ts uses parameterized queries for all INTERVAL clauses', async () => {
       const fs = await import('fs');
       const path = await import('path');
       const { fileURLToPath } = await import('url');
@@ -206,17 +208,17 @@ describe('Admin Stats SQL Injection Prevention', () => {
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
 
-      const adminPath = path.join(__dirname, '..', '..', 'routes', 'admin.ts');
-      const adminContent = fs.readFileSync(adminPath, 'utf-8');
+      const statsPath = path.join(__dirname, '..', '..', 'routes', 'admin', 'stats.ts');
+      const statsContent = fs.readFileSync(statsPath, 'utf-8');
 
       // Check that no string interpolation is used with INTERVAL
       const unsafePattern = /INTERVAL '\$\{/g;
-      const matches = adminContent.match(unsafePattern);
+      const matches = statsContent.match(unsafePattern);
 
       expect(matches).toBeNull();
     });
 
-    it('should verify admin.ts uses safe parameterized INTERVAL pattern', async () => {
+    it('should verify stats.ts uses safe parameterized INTERVAL pattern', async () => {
       const fs = await import('fs');
       const path = await import('path');
       const { fileURLToPath } = await import('url');
@@ -224,12 +226,12 @@ describe('Admin Stats SQL Injection Prevention', () => {
       const __filename = fileURLToPath(import.meta.url);
       const __dirname = path.dirname(__filename);
 
-      const adminPath = path.join(__dirname, '..', '..', 'routes', 'admin.ts');
-      const adminContent = fs.readFileSync(adminPath, 'utf-8');
+      const statsPath = path.join(__dirname, '..', '..', 'routes', 'admin', 'stats.ts');
+      const statsContent = fs.readFileSync(statsPath, 'utf-8');
 
       // Check that safe parameterized pattern is used
       const safePattern = /INTERVAL '1 day' \* \$\d/g;
-      const matches = adminContent.match(safePattern);
+      const matches = statsContent.match(safePattern);
 
       // Should find 4 occurrences (usersByDay, activeUsersByDay, postsByDay, commentsByDay)
       expect(matches).not.toBeNull();

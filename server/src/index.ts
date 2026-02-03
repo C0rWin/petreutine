@@ -20,7 +20,7 @@ import uploadRouter from './routes/upload.js';
 import commentsRouter from './routes/comments.js';
 import notificationsRouter from './routes/notifications.js';
 import moderationRouter from './routes/moderation.js';
-import adminRouter from './routes/admin.js';
+import adminRouter from './routes/admin/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
