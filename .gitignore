@@ -38,3 +38,6 @@ coverage
 
 # OS files
 Thumbs.db
+
+# Planning docs (local-only)
+.planning/
