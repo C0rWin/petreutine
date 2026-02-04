@@ -76,14 +76,15 @@ describe('PetCard', () => {
     const post = createMockPost({ status: 'RESOLVED' });
     render(<PetCard post={post} />);
 
-    expect(screen.getByText('ЗАВЕРШЕНО')).toBeInTheDocument();
+    // Component shows "ДОМА!" (at home!) for resolved pets
+    expect(screen.getByText('ДОМА!')).toBeInTheDocument();
   });
 
   it('does not display RESOLVED overlay when status is open', () => {
     const post = createMockPost({ status: 'OPEN' });
     render(<PetCard post={post} />);
 
-    expect(screen.queryByText('ЗАВЕРШЕНО')).not.toBeInTheDocument();
+    expect(screen.queryByText('ДОМА!')).not.toBeInTheDocument();
   });
 
   it('renders image when imageUrl provided', () => {
