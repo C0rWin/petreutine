@@ -1,9 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import { query } from '../db/index.js';
-import {
-  getNotificationsQuerySchema,
-  NotificationWithActor,
-} from '../types/comments.js';
+import { getNotificationsQuerySchema, NotificationWithActor } from '../types/comments.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
 
@@ -174,10 +171,7 @@ router.delete(
     try {
       const userId = req.userId!;
 
-      await query(
-        'DELETE FROM notifications WHERE user_id = $1',
-        [userId]
-      );
+      await query('DELETE FROM notifications WHERE user_id = $1', [userId]);
 
       res.status(204).send();
     } catch (error) {

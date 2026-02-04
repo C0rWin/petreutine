@@ -7,12 +7,14 @@ jest.unstable_mockModule('@aws-sdk/client-s3', () => ({
   S3Client: jest.fn().mockImplementation(() => ({
     send: mockS3Send,
   })),
-  PutObjectCommand: jest.fn().mockImplementation((params) => params),
-  DeleteObjectCommand: jest.fn().mockImplementation((params) => params),
+  PutObjectCommand: jest.fn().mockImplementation(params => params),
+  DeleteObjectCommand: jest.fn().mockImplementation(params => params),
 }));
 
 // Mock sharp
-const mockToBuffer = jest.fn<() => Promise<Buffer>>().mockResolvedValue(Buffer.from('processed-image'));
+const mockToBuffer = jest
+  .fn<() => Promise<Buffer>>()
+  .mockResolvedValue(Buffer.from('processed-image'));
 const mockSharpInstance = {
   resize: jest.fn().mockReturnThis(),
   jpeg: jest.fn().mockReturnThis(),
@@ -156,9 +158,7 @@ describe('Upload Routes', () => {
 
       await executeHandler('post', '/', mockReq as any, mockRes, mockNext);
 
-      expect(mockSharpInstance.png).toHaveBeenCalledWith(
-        expect.objectContaining({ quality: 85 })
-      );
+      expect(mockSharpInstance.png).toHaveBeenCalledWith(expect.objectContaining({ quality: 85 }));
     });
 
     it('should process JPEG images', async () => {
@@ -171,9 +171,7 @@ describe('Upload Routes', () => {
 
       await executeHandler('post', '/', mockReq as any, mockRes, mockNext);
 
-      expect(mockSharpInstance.jpeg).toHaveBeenCalledWith(
-        expect.objectContaining({ quality: 85 })
-      );
+      expect(mockSharpInstance.jpeg).toHaveBeenCalledWith(expect.objectContaining({ quality: 85 }));
     });
 
     it('should fallback to base64 if Spaces not configured', async () => {

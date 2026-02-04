@@ -1,4 +1,13 @@
-import { PetPost, User, PostType, AnimalType, Comment, Notification, VoteType, ReportReason } from '../types';
+import {
+  PetPost,
+  User,
+  PostType,
+  AnimalType,
+  Comment,
+  Notification,
+  VoteType,
+  ReportReason,
+} from '../types';
 
 // In development, Vite proxies /api to the backend
 // In production, the API is served from the same domain
@@ -62,10 +71,7 @@ class ApiService {
   private token: string | null = null;
   private userId: string | null = null;
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -137,7 +143,12 @@ class ApiService {
     return this.request<PostsResponse>('/api/posts/my');
   }
 
-  async createPost(post: Omit<PetPost, 'id' | 'userId' | 'user' | 'createdAt' | 'status'> & { latitude?: number; longitude?: number }): Promise<ApiResponse<PetPost>> {
+  async createPost(
+    post: Omit<PetPost, 'id' | 'userId' | 'user' | 'createdAt' | 'status'> & {
+      latitude?: number;
+      longitude?: number;
+    }
+  ): Promise<ApiResponse<PetPost>> {
     return this.request<PetPost>('/api/posts', {
       method: 'POST',
       body: JSON.stringify({
@@ -180,14 +191,17 @@ class ApiService {
   }
 
   // Search
-  async search(query: string, filters?: {
-    type?: PostType;
-    animal_type?: AnimalType;
-    location?: string;
-    status?: 'OPEN' | 'RESOLVED';
-    limit?: number;
-    offset?: number;
-  }): Promise<ApiResponse<SearchResponse>> {
+  async search(
+    query: string,
+    filters?: {
+      type?: PostType;
+      animal_type?: AnimalType;
+      location?: string;
+      status?: 'OPEN' | 'RESOLVED';
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<ApiResponse<SearchResponse>> {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
     if (filters?.type) params.set('type', filters.type);
@@ -225,7 +239,9 @@ class ApiService {
   }
 
   // Image upload
-  async uploadImage(file: File): Promise<ApiResponse<{ url: string; thumbnail: string; isBase64: boolean }>> {
+  async uploadImage(
+    file: File
+  ): Promise<ApiResponse<{ url: string; thumbnail: string; isBase64: boolean }>> {
     try {
       const formData = new FormData();
       formData.append('image', file);
@@ -258,18 +274,23 @@ class ApiService {
   // COMMENTS API
   // ============================================
 
-  async getComments(postId: string, options?: {
-    sort?: 'best' | 'new' | 'old' | 'controversial';
-    limit?: number;
-    offset?: number;
-  }): Promise<ApiResponse<CommentsResponse>> {
+  async getComments(
+    postId: string,
+    options?: {
+      sort?: 'best' | 'new' | 'old' | 'controversial';
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<ApiResponse<CommentsResponse>> {
     const params = new URLSearchParams();
     if (options?.sort) params.set('sort', options.sort);
     if (options?.limit) params.set('limit', options.limit.toString());
     if (options?.offset) params.set('offset', options.offset.toString());
 
     const queryString = params.toString();
-    return this.request<CommentsResponse>(`/api/posts/${postId}/comments${queryString ? `?${queryString}` : ''}`);
+    return this.request<CommentsResponse>(
+      `/api/posts/${postId}/comments${queryString ? `?${queryString}` : ''}`
+    );
   }
 
   async createComment(data: {
@@ -309,7 +330,11 @@ class ApiService {
     });
   }
 
-  async reportComment(id: string, reason: ReportReason, description?: string): Promise<ApiResponse<{ message: string }>> {
+  async reportComment(
+    id: string,
+    reason: ReportReason,
+    description?: string
+  ): Promise<ApiResponse<{ message: string }>> {
     return this.request<{ message: string }>(`/api/comments/${id}/report`, {
       method: 'POST',
       body: JSON.stringify({ reason, description }),
@@ -331,7 +356,9 @@ class ApiService {
     if (options?.unread_only) params.set('unread_only', 'true');
 
     const queryString = params.toString();
-    return this.request<NotificationsResponse>(`/api/notifications${queryString ? `?${queryString}` : ''}`);
+    return this.request<NotificationsResponse>(
+      `/api/notifications${queryString ? `?${queryString}` : ''}`
+    );
   }
 
   async getUnreadCount(): Promise<ApiResponse<UnreadCountResponse>> {

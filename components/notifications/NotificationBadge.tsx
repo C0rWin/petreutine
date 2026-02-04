@@ -9,9 +9,7 @@ interface NotificationBadgeProps {
 
 const POLL_INTERVAL = 30000; // 30 seconds
 
-export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
-  onNotificationClick,
-}) => {
+export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ onNotificationClick }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -45,12 +43,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
         className="relative p-2 text-white/80 hover:text-white transition-colors"
         aria-label="Уведомления"
       >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"

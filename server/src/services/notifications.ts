@@ -11,17 +11,15 @@ export async function createCommentNotification(
 ): Promise<void> {
   try {
     // Get author name for notification message
-    const authorResult = await query<{ name: string }>(
-      'SELECT name FROM users WHERE id = $1',
-      [authorId]
-    );
+    const authorResult = await query<{ name: string }>('SELECT name FROM users WHERE id = $1', [
+      authorId,
+    ]);
     const authorName = authorResult.rows[0]?.name || 'Пользователь';
 
     // Get post title for context
-    const postResult = await query<{ title: string }>(
-      'SELECT title FROM posts WHERE id = $1',
-      [comment.post_id]
-    );
+    const postResult = await query<{ title: string }>('SELECT title FROM posts WHERE id = $1', [
+      comment.post_id,
+    ]);
     const postTitle = postResult.rows[0]?.title || 'объявление';
 
     // If this is a reply, notify the parent comment author
@@ -58,7 +56,8 @@ export async function createCommentNotification(
     // Notify post owner about new comment (if not replying to their comment already and not their own comment)
     if (postOwnerId !== authorId) {
       // Check if we already notified them as parent comment author
-      const isReplyToPostOwner = comment.parent_id && await isCommentByUser(comment.parent_id, postOwnerId);
+      const isReplyToPostOwner =
+        comment.parent_id && (await isCommentByUser(comment.parent_id, postOwnerId));
 
       if (!isReplyToPostOwner) {
         await query(
@@ -99,10 +98,9 @@ export async function createUpvoteNotification(
     }
 
     // Get voter name
-    const voterResult = await query<{ name: string }>(
-      'SELECT name FROM users WHERE id = $1',
-      [voterId]
-    );
+    const voterResult = await query<{ name: string }>('SELECT name FROM users WHERE id = $1', [
+      voterId,
+    ]);
     const voterName = voterResult.rows[0]?.name || 'Пользователь';
 
     // Get comment and post info
@@ -219,10 +217,9 @@ export async function createModerationRejectedNotification(
 // Helper functions
 
 async function isCommentByUser(commentId: string, userId: string): Promise<boolean> {
-  const result = await query<{ user_id: string }>(
-    'SELECT user_id FROM comments WHERE id = $1',
-    [commentId]
-  );
+  const result = await query<{ user_id: string }>('SELECT user_id FROM comments WHERE id = $1', [
+    commentId,
+  ]);
   return result.rows.length > 0 && result.rows[0].user_id === userId;
 }
 

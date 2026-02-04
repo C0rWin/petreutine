@@ -48,7 +48,6 @@ const MyPosts: React.FC<MyPostsProps> = ({ onClose, onSelectPost }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-
         {/* Header */}
         <div className="p-6 border-b border-gray-100 flex-shrink-0">
           <div className="flex justify-between items-center">
@@ -60,21 +59,24 @@ const MyPosts: React.FC<MyPostsProps> = ({ onClose, onSelectPost }) => {
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
 
           {/* Filter Tabs */}
           <div className="flex gap-2 mt-4">
-            {(['ALL', 'OPEN', 'RESOLVED'] as const).map((tab) => (
+            {(['ALL', 'OPEN', 'RESOLVED'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setFilter(tab)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  filter === tab
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  filter === tab ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 {tab === 'ALL' ? 'Все' : tab === 'OPEN' ? 'Активные' : 'Завершённые'}
@@ -114,7 +116,11 @@ const MyPosts: React.FC<MyPostsProps> = ({ onClose, onSelectPost }) => {
                     {post.status === 'RESOLVED' && (
                       <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                         Завершено
                       </span>
@@ -126,14 +132,26 @@ const MyPosts: React.FC<MyPostsProps> = ({ onClose, onSelectPost }) => {
           ) : (
             <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
               <div className="text-gray-400 mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-16 h-16 mx-auto"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
               </div>
               {filter === 'ALL' ? (
                 <>
                   <h3 className="text-lg font-medium text-gray-900">У вас пока нет объявлений</h3>
-                  <p className="text-gray-500 mt-1">Создайте первое объявление о пропавшем или найденном питомце</p>
+                  <p className="text-gray-500 mt-1">
+                    Создайте первое объявление о пропавшем или найденном питомце
+                  </p>
                 </>
               ) : filter === 'OPEN' ? (
                 <>
@@ -143,7 +161,9 @@ const MyPosts: React.FC<MyPostsProps> = ({ onClose, onSelectPost }) => {
               ) : (
                 <>
                   <h3 className="text-lg font-medium text-gray-900">Нет завершённых объявлений</h3>
-                  <p className="text-gray-500 mt-1">Отметьте объявление как завершённое, когда питомец найдётся</p>
+                  <p className="text-gray-500 mt-1">
+                    Отметьте объявление как завершённое, когда питомец найдётся
+                  </p>
                 </>
               )}
             </div>

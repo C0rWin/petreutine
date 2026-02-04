@@ -64,7 +64,7 @@ const CollapsibleThread: React.FC<CollapsibleThreadProps> = ({
               Показать {comment.replies!.length} ответов...
             </button>
           ) : (
-            comment.replies!.map((reply) => (
+            comment.replies!.map(reply => (
               <CollapsibleThread
                 key={reply.id}
                 comment={reply}
@@ -114,7 +114,7 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
 
   return (
     <div className="space-y-1">
-      {comments.map((comment) => (
+      {comments.map(comment => (
         <CollapsibleThread
           key={comment.id}
           comment={comment}

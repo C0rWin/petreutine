@@ -102,9 +102,7 @@ describe('Security Middleware', () => {
 
       sanitizeInput(mockReq as any, mockRes, mockNext);
 
-      expect(mockReq.body.title).toBe(
-        '&lt;script&gt;alert(&quot;xss&quot;)&lt;&#x2F;script&gt;'
-      );
+      expect(mockReq.body.title).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;&#x2F;script&gt;');
       expect(mockReq.body.description).toBe('Normal text');
       expect(mockNext).toHaveBeenCalled();
     });
@@ -164,9 +162,7 @@ describe('Security Middleware', () => {
 
       sanitizeInput(mockReq as any, mockRes, mockNext);
 
-      expect(mockReq.body.text).toBe(
-        'Tom &amp; Jerry&#x27;s &quot;adventure&quot; &#x2F; story'
-      );
+      expect(mockReq.body.text).toBe('Tom &amp; Jerry&#x27;s &quot;adventure&quot; &#x2F; story');
     });
 
     it('should handle null body gracefully', () => {

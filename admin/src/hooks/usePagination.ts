@@ -21,11 +21,11 @@ export function usePagination(options: UsePaginationOptions = {}) {
   );
 
   const nextPage = useCallback(() => {
-    setOffset((prev) => prev + limit);
+    setOffset(prev => prev + limit);
   }, [limit]);
 
   const prevPage = useCallback(() => {
-    setOffset((prev) => Math.max(0, prev - limit));
+    setOffset(prev => Math.max(0, prev - limit));
   }, [limit]);
 
   const changeLimit = useCallback((newLimit: number) => {

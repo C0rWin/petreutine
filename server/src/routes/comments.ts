@@ -343,7 +343,7 @@ router.delete(
 
       // Soft delete
       await query(
-        'UPDATE comments SET deleted_at = CURRENT_TIMESTAMP, content = \'[Комментарий удалён]\' WHERE id = $1',
+        "UPDATE comments SET deleted_at = CURRENT_TIMESTAMP, content = '[Комментарий удалён]' WHERE id = $1",
         [id]
       );
 
@@ -425,10 +425,7 @@ router.delete(
       const { id } = req.params;
       const userId = req.userId!;
 
-      await query(
-        'DELETE FROM comment_votes WHERE comment_id = $1 AND user_id = $2',
-        [id, userId]
-      );
+      await query('DELETE FROM comment_votes WHERE comment_id = $1 AND user_id = $2', [id, userId]);
 
       // Get updated vote counts
       const result = await query<{ upvotes: number; downvotes: number; score: number }>(
@@ -500,10 +497,7 @@ router.post(
         [id]
       );
       if (parseInt(reportCount.rows[0].count, 10) >= 3) {
-        await query(
-          'UPDATE comments SET status = $1 WHERE id = $2',
-          [CommentStatus.FLAGGED, id]
-        );
+        await query('UPDATE comments SET status = $1 WHERE id = $2', [CommentStatus.FLAGGED, id]);
       }
 
       res.status(201).json({ message: 'Жалоба отправлена' });

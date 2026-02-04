@@ -2,7 +2,8 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { createMockRequest, createMockResponse, createMockNext, mockUser } from '../setup.js';
 
 // Create mocks before importing the router
-const mockQueryFn = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
+const mockQueryFn =
+  jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
 
 const mockPoolQuery = jest.fn<() => Promise<{ rows: any[]; rowCount: number }>>();
 mockPoolQuery.mockResolvedValue({ rows: [{ result: 1 }], rowCount: 1 });
@@ -99,20 +100,20 @@ describe('Admin Stats SQL Injection Prevention', () => {
 
   // SQL injection payloads that should be rejected or sanitized
   const SQL_INJECTION_PAYLOADS = [
-    "1; DROP TABLE users; --",
-    "30 OR 1=1",
+    '1; DROP TABLE users; --',
+    '30 OR 1=1',
     "30' OR '1'='1",
-    "30; SELECT * FROM users; --",
-    "30 UNION SELECT * FROM users",
-    "-1 OR 1=1",
+    '30; SELECT * FROM users; --',
+    '30 UNION SELECT * FROM users',
+    '-1 OR 1=1',
     "1' AND SLEEP(5)--",
-    "abc", // non-numeric string
-    "30; DELETE FROM posts;",
+    'abc', // non-numeric string
+    '30; DELETE FROM posts;',
     "30' --",
   ];
 
   describe('GET /stats/users - SQL Injection Prevention', () => {
-    SQL_INJECTION_PAYLOADS.forEach((payload) => {
+    SQL_INJECTION_PAYLOADS.forEach(payload => {
       it(`should reject or sanitize SQL injection payload: "${payload}"`, async () => {
         // Zod coerces the days parameter to a number
         // Invalid strings become NaN or the numeric part is extracted
@@ -139,7 +140,10 @@ describe('Admin Stats SQL Injection Prevention', () => {
     it('should use parameterized query for valid numeric days', async () => {
       // Mock all the query responses for the stats/users endpoint
       mockQueryFn
-        .mockResolvedValueOnce({ rows: [{ total_users: 100, banned_users: 5, comment_banned_users: 2 }], rowCount: 1 })
+        .mockResolvedValueOnce({
+          rows: [{ total_users: 100, banned_users: 5, comment_banned_users: 2 }],
+          rowCount: 1,
+        })
         .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // usersByDay
         .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // activeUsersByDay
         .mockResolvedValueOnce({ rows: [], rowCount: 0 }) // topPosters
@@ -150,7 +154,9 @@ describe('Admin Stats SQL Injection Prevention', () => {
 
       // Verify parameterized queries are used
       const queryCalls = mockQueryFn.mock.calls;
-      const usersByDayCall = queryCalls.find(([sql]) => sql.includes('usersByDay') || (sql.includes('users') && sql.includes('INTERVAL')));
+      const usersByDayCall = queryCalls.find(
+        ([sql]) => sql.includes('usersByDay') || (sql.includes('users') && sql.includes('INTERVAL'))
+      );
 
       // Check that INTERVAL uses parameterized pattern
       queryCalls.forEach(([sql, params]) => {
@@ -166,7 +172,7 @@ describe('Admin Stats SQL Injection Prevention', () => {
   });
 
   describe('GET /stats/posts - SQL Injection Prevention', () => {
-    SQL_INJECTION_PAYLOADS.forEach((payload) => {
+    SQL_INJECTION_PAYLOADS.forEach(payload => {
       it(`should reject or sanitize SQL injection payload: "${payload}"`, async () => {
         mockReq.query = { days: payload };
         await executeHandler('get', '/stats/posts', mockReq as any, mockRes, mockNext);
@@ -183,7 +189,7 @@ describe('Admin Stats SQL Injection Prevention', () => {
   });
 
   describe('GET /stats/comments - SQL Injection Prevention', () => {
-    SQL_INJECTION_PAYLOADS.forEach((payload) => {
+    SQL_INJECTION_PAYLOADS.forEach(payload => {
       it(`should reject or sanitize SQL injection payload: "${payload}"`, async () => {
         mockReq.query = { days: payload };
         await executeHandler('get', '/stats/comments', mockReq as any, mockRes, mockNext);
@@ -293,7 +299,7 @@ describe('/internal/db-url Credential Protection', () => {
       /res\.json\([^)]*process\.env\.DATABASE_URL/i,
     ];
 
-    credentialPatterns.forEach((pattern) => {
+    credentialPatterns.forEach(pattern => {
       expect(indexContent).not.toMatch(pattern);
     });
   });

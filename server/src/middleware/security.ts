@@ -49,10 +49,7 @@ export function httpsRedirect(req: Request, res: Response, next: NextFunction): 
   }
 
   // Check if we're in production and request is not secure
-  if (
-    process.env.NODE_ENV === 'production' &&
-    req.headers['x-forwarded-proto'] !== 'https'
-  ) {
+  if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
     // Redirect to HTTPS
     res.redirect(301, `https://${req.headers.host}${req.url}`);
     return;
@@ -81,9 +78,7 @@ function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
     } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
       sanitized[key] = sanitizeObject(value as Record<string, unknown>);
     } else if (Array.isArray(value)) {
-      sanitized[key] = value.map(item =>
-        typeof item === 'string' ? sanitizeString(item) : item
-      );
+      sanitized[key] = value.map(item => (typeof item === 'string' ? sanitizeString(item) : item));
     } else {
       sanitized[key] = value;
     }
@@ -126,10 +121,7 @@ export function securityHeaders(_req: Request, res: Response, next: NextFunction
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   // Permissions policy
-  res.setHeader(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(self)'
-  );
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
 
   next();
 }

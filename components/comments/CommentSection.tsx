@@ -64,8 +64,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
 
     if (result.data) {
       // Add new comment to the list
-      setComments((prev) => [result.data!, ...prev]);
-      setTotal((prev) => prev + 1);
+      setComments(prev => [result.data!, ...prev]);
+      setTotal(prev => prev + 1);
     }
   };
 
@@ -157,7 +157,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   const updateCommentInTree = (commentId: string, updates: Partial<Comment>) => {
-    setComments((prev) => updateNestedComment(prev, commentId, updates));
+    setComments(prev => updateNestedComment(prev, commentId, updates));
   };
 
   const updateNestedComment = (
@@ -165,7 +165,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     targetId: string,
     updates: Partial<Comment>
   ): Comment[] => {
-    return comments.map((comment) => {
+    return comments.map(comment => {
       if (comment.id === targetId) {
         return { ...comment, ...updates };
       }
@@ -185,11 +185,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <h3 className="font-semibold text-gray-900">
           Комментарии
-          {total > 0 && (
-            <span className="ml-2 text-sm font-normal text-gray-500">
-              ({total})
-            </span>
-          )}
+          {total > 0 && <span className="ml-2 text-sm font-normal text-gray-500">({total})</span>}
         </h3>
 
         {comments.length > 0 && (
@@ -197,10 +193,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
             <span className="text-sm text-gray-500">Сортировка:</span>
             <select
               value={sort}
-              onChange={(e) => setSort(e.target.value as SortOption)}
+              onChange={e => setSort(e.target.value as SortOption)}
               className="text-sm border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-coral-500/50"
             >
-              {SORT_OPTIONS.map((option) => (
+              {SORT_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -268,9 +264,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            <p className="text-gray-500">
-              Пока нет комментариев. Будьте первым!
-            </p>
+            <p className="text-gray-500">Пока нет комментариев. Будьте первым!</p>
           </div>
         ) : (
           <CommentThread

@@ -86,8 +86,18 @@ export function PostDetailPage() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button onClick={() => navigate('/posts')} className="p-2 hover:bg-gray-100 rounded-lg">
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-5 h-5 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
         <h1 className="text-2xl font-bold text-gray-900">Детали публикации</h1>
@@ -98,11 +108,7 @@ export function PostDetailPage() {
         {/* Image */}
         {post.image_url && (
           <div className="aspect-video max-h-80 bg-gray-100">
-            <img
-              src={post.image_url}
-              alt={post.title}
-              className="w-full h-full object-cover"
-            />
+            <img src={post.image_url} alt={post.title} className="w-full h-full object-cover" />
           </div>
         )}
 
@@ -205,7 +211,10 @@ export function PostDetailPage() {
       {/* Toggle Comments Modal */}
       {showToggleCommentsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={() => setShowToggleCommentsModal(false)} />
+          <div
+            className="absolute inset-0 bg-black/50 animate-fade-in"
+            onClick={() => setShowToggleCommentsModal(false)}
+          />
           <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-slide-up">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               {post.comments_enabled ? 'Отключить комментарии' : 'Включить комментарии'}
@@ -217,7 +226,7 @@ export function PostDetailPage() {
                 </label>
                 <textarea
                   value={disableReason}
-                  onChange={(e) => setDisableReason(e.target.value)}
+                  onChange={e => setDisableReason(e.target.value)}
                   placeholder="Укажите причину..."
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral-500 resize-none"
@@ -255,7 +264,10 @@ export function PostDetailPage() {
       {/* Delete Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={() => setShowDeleteModal(false)} />
+          <div
+            className="absolute inset-0 bg-black/50 animate-fade-in"
+            onClick={() => setShowDeleteModal(false)}
+          />
           <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-slide-up">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Удалить публикацию</h3>
             <p className="text-sm text-gray-600 mb-4">
@@ -267,7 +279,7 @@ export function PostDetailPage() {
               </label>
               <textarea
                 value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
+                onChange={e => setDeleteReason(e.target.value)}
                 placeholder="Укажите причину..."
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral-500 resize-none"

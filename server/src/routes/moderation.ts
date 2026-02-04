@@ -22,15 +22,13 @@ const router = Router();
 router.use(requireAuth, requireModerator);
 
 // GET /api/moderation/queue - Get pending comments for review
-router.get(
-  '/queue',
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    try {
-      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
-      const offset = parseInt(req.query.offset as string) || 0;
+router.get('/queue', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const offset = parseInt(req.query.offset as string) || 0;
 
-      const result = await query<CommentWithUser>(
-        `
+    const result = await query<CommentWithUser>(
+      `
         SELECT
           c.id, c.post_id, c.user_id, c.parent_id, c.content,
           c.status, c.upvotes, c.downvotes, c.score,
@@ -53,33 +51,30 @@ router.get(
         ORDER BY c.created_at ASC
         LIMIT $1 OFFSET $2
         `,
-        [limit, offset]
-      );
+      [limit, offset]
+    );
 
-      const countResult = await query<{ count: string }>(
-        `SELECT COUNT(*) as count FROM comments WHERE status = 'pending' AND deleted_at IS NULL`
-      );
+    const countResult = await query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM comments WHERE status = 'pending' AND deleted_at IS NULL`
+    );
 
-      res.json({
-        comments: result.rows,
-        total: parseInt(countResult.rows[0].count, 10),
-      });
-    } catch (error) {
-      next(error);
-    }
+    res.json({
+      comments: result.rows,
+      total: parseInt(countResult.rows[0].count, 10),
+    });
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 // GET /api/moderation/flagged - Get flagged comments (reported by community)
-router.get(
-  '/flagged',
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    try {
-      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
-      const offset = parseInt(req.query.offset as string) || 0;
+router.get('/flagged', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const offset = parseInt(req.query.offset as string) || 0;
 
-      const result = await query<CommentWithUser & { report_count: number }>(
-        `
+    const result = await query<CommentWithUser & { report_count: number }>(
+      `
         SELECT
           c.id, c.post_id, c.user_id, c.parent_id, c.content,
           c.status, c.upvotes, c.downvotes, c.score,
@@ -103,33 +98,30 @@ router.get(
         ORDER BY report_count DESC, c.created_at ASC
         LIMIT $1 OFFSET $2
         `,
-        [limit, offset]
-      );
+      [limit, offset]
+    );
 
-      const countResult = await query<{ count: string }>(
-        `SELECT COUNT(*) as count FROM comments WHERE status = 'flagged' AND deleted_at IS NULL`
-      );
+    const countResult = await query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM comments WHERE status = 'flagged' AND deleted_at IS NULL`
+    );
 
-      res.json({
-        comments: result.rows,
-        total: parseInt(countResult.rows[0].count, 10),
-      });
-    } catch (error) {
-      next(error);
-    }
+    res.json({
+      comments: result.rows,
+      total: parseInt(countResult.rows[0].count, 10),
+    });
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 // GET /api/moderation/reports - Get pending reports
-router.get(
-  '/reports',
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    try {
-      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
-      const offset = parseInt(req.query.offset as string) || 0;
+router.get('/reports', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+    const offset = parseInt(req.query.offset as string) || 0;
 
-      const result = await query<CommentReportWithDetails>(
-        `
+    const result = await query<CommentReportWithDetails>(
+      `
         SELECT
           r.id, r.comment_id, r.reporter_id, r.reason, r.description,
           r.status, r.reviewed_by, r.reviewed_at, r.resolution_note,
@@ -160,22 +152,21 @@ router.get(
         ORDER BY r.created_at ASC
         LIMIT $1 OFFSET $2
         `,
-        [limit, offset]
-      );
+      [limit, offset]
+    );
 
-      const countResult = await query<{ count: string }>(
-        `SELECT COUNT(*) as count FROM comment_reports WHERE status = 'pending'`
-      );
+    const countResult = await query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM comment_reports WHERE status = 'pending'`
+    );
 
-      res.json({
-        reports: result.rows,
-        total: parseInt(countResult.rows[0].count, 10),
-      });
-    } catch (error) {
-      next(error);
-    }
+    res.json({
+      reports: result.rows,
+      total: parseInt(countResult.rows[0].count, 10),
+    });
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 // POST /api/moderation/comments/:id/review - Approve or reject a comment
 router.post(
@@ -204,7 +195,8 @@ router.post(
       }
 
       // Update comment status
-      const newStatus = data.status === 'approved' ? CommentStatus.APPROVED : CommentStatus.REJECTED;
+      const newStatus =
+        data.status === 'approved' ? CommentStatus.APPROVED : CommentStatus.REJECTED;
 
       await query(
         `
@@ -226,7 +218,10 @@ router.post(
         [
           data.status === 'approved' ? ReportStatus.DISMISSED : ReportStatus.RESOLVED,
           moderatorId,
-          data.reason || (data.status === 'approved' ? 'Комментарий одобрен модератором' : 'Комментарий отклонён'),
+          data.reason ||
+            (data.status === 'approved'
+              ? 'Комментарий одобрен модератором'
+              : 'Комментарий отклонён'),
           id,
         ]
       );
@@ -303,36 +298,33 @@ router.post(
 );
 
 // GET /api/moderation/stats - Get moderation statistics
-router.get(
-  '/stats',
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    try {
-      const [pendingComments, flaggedComments, pendingReports, todayModerated] = await Promise.all([
-        query<{ count: string }>(
-          `SELECT COUNT(*) as count FROM comments WHERE status = 'pending' AND deleted_at IS NULL`
-        ),
-        query<{ count: string }>(
-          `SELECT COUNT(*) as count FROM comments WHERE status = 'flagged' AND deleted_at IS NULL`
-        ),
-        query<{ count: string }>(
-          `SELECT COUNT(*) as count FROM comment_reports WHERE status = 'pending'`
-        ),
-        query<{ count: string }>(
-          `SELECT COUNT(*) as count FROM comments
+router.get('/stats', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const [pendingComments, flaggedComments, pendingReports, todayModerated] = await Promise.all([
+      query<{ count: string }>(
+        `SELECT COUNT(*) as count FROM comments WHERE status = 'pending' AND deleted_at IS NULL`
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(*) as count FROM comments WHERE status = 'flagged' AND deleted_at IS NULL`
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(*) as count FROM comment_reports WHERE status = 'pending'`
+      ),
+      query<{ count: string }>(
+        `SELECT COUNT(*) as count FROM comments
            WHERE moderated_at >= CURRENT_DATE AND moderated_at < CURRENT_DATE + INTERVAL '1 day'`
-        ),
-      ]);
+      ),
+    ]);
 
-      res.json({
-        pending_comments: parseInt(pendingComments.rows[0].count, 10),
-        flagged_comments: parseInt(flaggedComments.rows[0].count, 10),
-        pending_reports: parseInt(pendingReports.rows[0].count, 10),
-        today_moderated: parseInt(todayModerated.rows[0].count, 10),
-      });
-    } catch (error) {
-      next(error);
-    }
+    res.json({
+      pending_comments: parseInt(pendingComments.rows[0].count, 10),
+      flagged_comments: parseInt(flaggedComments.rows[0].count, 10),
+      pending_reports: parseInt(pendingReports.rows[0].count, 10),
+      today_moderated: parseInt(todayModerated.rows[0].count, 10),
+    });
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 export default router;

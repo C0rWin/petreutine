@@ -3,7 +3,8 @@ import { createMockRequest, createMockResponse, createMockNext, mockUser } from 
 import crypto from 'crypto';
 
 // Create mocks before importing the router
-const mockQueryFn = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
+const mockQueryFn =
+  jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
 const mockGenerateToken = jest.fn().mockReturnValue('test-jwt-token');
 const mockVerifyToken = jest.fn();
 
@@ -41,7 +42,7 @@ beforeEach(() => {
   jest.clearAllMocks();
 
   // Default mock implementation
-  mockQueryFn.mockImplementation(async (sql) => {
+  mockQueryFn.mockImplementation(async sql => {
     if (sql.includes('cleanup_expired_oauth_states')) {
       return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
     }
@@ -125,7 +126,7 @@ describe('OAuth State Security', () => {
     });
 
     it('should reject callback with invalid state parameter', async () => {
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states')) {
           // Invalid state - not found in database
           return { rows: [], rowCount: 0 };
@@ -143,8 +144,11 @@ describe('OAuth State Security', () => {
     });
 
     it('should reject callback with expired state parameter', async () => {
-      mockQueryFn.mockImplementation(async (sql) => {
-        if (sql.includes('DELETE FROM oauth_states') && sql.includes('expires_at > CURRENT_TIMESTAMP')) {
+      mockQueryFn.mockImplementation(async sql => {
+        if (
+          sql.includes('DELETE FROM oauth_states') &&
+          sql.includes('expires_at > CURRENT_TIMESTAMP')
+        ) {
           // Expired state - query returns no rows due to expires_at condition
           return { rows: [], rowCount: 0 };
         }
@@ -162,7 +166,7 @@ describe('OAuth State Security', () => {
     });
 
     it('should reject predictable state values like "admin"', async () => {
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states')) {
           // Predictable values won't be in the database
           return { rows: [], rowCount: 0 };
@@ -241,7 +245,7 @@ describe('OAuth State Security', () => {
     it('should redirect to admin page when validated state contains admin redirect', async () => {
       const validState = crypto.randomBytes(32).toString('hex');
 
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
           return { rows: [{ redirect_to: 'admin' }], rowCount: 1 };
         }
@@ -284,7 +288,7 @@ describe('OAuth State Security', () => {
     it('should redirect to home when state has no redirect_to', async () => {
       const validState = crypto.randomBytes(32).toString('hex');
 
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
           return { rows: [{ redirect_to: null }], rowCount: 1 };
         }
@@ -333,7 +337,7 @@ describe('OAuth State Security', () => {
       let queryContainsDELETE = false;
       let queryContainsRETURNING = false;
 
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states')) {
           deleteQueryCalled = true;
           queryContainsDELETE = sql.includes('DELETE');
@@ -357,7 +361,7 @@ describe('OAuth State Security', () => {
     it('should check expires_at in state validation query', async () => {
       let queryContainsExpiryCheck = false;
 
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states')) {
           queryContainsExpiryCheck = sql.includes('expires_at > CURRENT_TIMESTAMP');
           return { rows: [], rowCount: 0 };
@@ -397,7 +401,7 @@ describe('OAuth state 5-minute expiry (time-based)', () => {
     const validState = crypto.randomBytes(32).toString('hex');
 
     // Mock OAuth state validation - state is still valid (not expired)
-    mockQueryFn.mockImplementation(async (sql) => {
+    mockQueryFn.mockImplementation(async sql => {
       if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
         // State is valid - not expired yet (4:59 < 5:00)
         return { rows: [{ redirect_to: null }], rowCount: 1 };
@@ -447,7 +451,7 @@ describe('OAuth state 5-minute expiry (time-based)', () => {
     const expiredState = crypto.randomBytes(32).toString('hex');
 
     // Mock OAuth state validation - state is expired
-    mockQueryFn.mockImplementation(async (sql) => {
+    mockQueryFn.mockImplementation(async sql => {
       if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
         // State is expired - query returns empty due to expires_at > CURRENT_TIMESTAMP condition
         return { rows: [], rowCount: 0 };

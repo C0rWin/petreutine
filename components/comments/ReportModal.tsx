@@ -35,11 +35,7 @@ const REPORT_REASONS: { value: ReportReason; label: string; description: string 
   },
 ];
 
-export const ReportModal: React.FC<ReportModalProps> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-}) => {
+export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, onSubmit }) => {
   const [selectedReason, setSelectedReason] = useState<ReportReason | null>(null);
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,29 +73,29 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
       <div className="relative bg-white rounded-xl shadow-2xl max-w-md w-full animate-fade-in">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Пожаловаться на комментарий
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900">Пожаловаться на комментарий</h3>
             <button
               onClick={handleClose}
               className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
 
           <form onSubmit={handleSubmit}>
             <div className="space-y-2 mb-4">
-              {REPORT_REASONS.map((reason) => (
+              {REPORT_REASONS.map(reason => (
                 <label
                   key={reason.value}
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -131,7 +127,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 </label>
                 <textarea
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={e => setDescription(e.target.value)}
                   placeholder="Опишите проблему подробнее..."
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-coral-500/50 focus:border-coral-500"
                   rows={3}
@@ -143,9 +139,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               </div>
             )}
 
-            {error && (
-              <p className="mb-4 text-sm text-red-500">{error}</p>
-            )}
+            {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
 
             <div className="flex justify-end gap-2">
               <button

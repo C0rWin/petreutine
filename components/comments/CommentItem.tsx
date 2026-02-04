@@ -137,12 +137,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               {comment.user.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <span className="font-medium text-sm text-gray-900">
-            {comment.user.name}
-          </span>
-          <span className="text-xs text-gray-400">
-            {formatTimeAgo(comment.created_at)}
-          </span>
+          <span className="font-medium text-sm text-gray-900">{comment.user.name}</span>
+          <span className="text-xs text-gray-400">{formatTimeAgo(comment.created_at)}</span>
           {comment.created_at !== comment.updated_at && !isDeleted && (
             <span className="text-xs text-gray-400 italic">(изменён)</span>
           )}
@@ -163,7 +159,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           <div className="mb-2">
             <textarea
               value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
+              onChange={e => setEditContent(e.target.value)}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-coral-500/50 focus:border-coral-500"
               rows={3}
             />
@@ -186,16 +182,20 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             </div>
           </div>
         ) : (
-          <p className={`text-sm text-gray-700 whitespace-pre-wrap mb-2 ${isDeleted ? 'italic text-gray-400' : ''}`}>
+          <p
+            className={`text-sm text-gray-700 whitespace-pre-wrap mb-2 ${isDeleted ? 'italic text-gray-400' : ''}`}
+          >
             {comment.content}
           </p>
         )}
 
         {/* Moderation message */}
         {comment._moderation?.message && (
-          <div className={`text-xs p-2 rounded mb-2 ${
-            isRejected ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-700'
-          }`}>
+          <div
+            className={`text-xs p-2 rounded mb-2 ${
+              isRejected ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-700'
+            }`}
+          >
             {comment._moderation.message}
             {comment._moderation.reason && (
               <span className="block mt-1 font-medium">{comment._moderation.reason}</span>
@@ -277,14 +277,13 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       {/* Delete Confirmation */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeleteConfirm(false)} />
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowDeleteConfirm(false)}
+          />
           <div className="relative bg-white rounded-xl p-6 max-w-sm w-full animate-fade-in">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Удалить комментарий?
-            </h3>
-            <p className="text-gray-600 text-sm mb-4">
-              Это действие нельзя отменить.
-            </p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Удалить комментарий?</h3>
+            <p className="text-gray-600 text-sm mb-4">Это действие нельзя отменить.</p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowDeleteConfirm(false)}

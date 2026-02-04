@@ -3,7 +3,8 @@ import { createMockRequest, createMockResponse, createMockNext, mockPost } from 
 import { PostType, AnimalType, PostStatus } from '../../types/index.js';
 
 // Create mocks before importing the router
-const mockQueryFn = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
+const mockQueryFn =
+  jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
 
 jest.unstable_mockModule('../../db/index.js', () => ({
   query: mockQueryFn,
@@ -254,7 +255,7 @@ describe('Search Routes', () => {
 
       expect(mockQueryFn).toHaveBeenNthCalledWith(
         2,
-        expect.stringContaining("p.type = $4"),
+        expect.stringContaining('p.type = $4'),
         expect.arrayContaining(['FOUND'])
       );
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -278,7 +279,7 @@ describe('Search Routes', () => {
 
       expect(mockQueryFn).toHaveBeenNthCalledWith(
         2,
-        expect.stringContaining("p.type = $4"),
+        expect.stringContaining('p.type = $4'),
         expect.arrayContaining(['LOST'])
       );
     });
@@ -341,7 +342,9 @@ describe('Search Routes', () => {
       mockReq.params = { postId: 'source-post-id' };
       await executeHandler('get', '/matches/:postId', mockReq as any, mockRes, mockNext);
 
-      const response = (mockRes.json as jest.Mock).mock.calls[0][0] as { matches: Array<{ reason: string; confidence: number }> };
+      const response = (mockRes.json as jest.Mock).mock.calls[0][0] as {
+        matches: Array<{ reason: string; confidence: number }>;
+      };
       expect(response.matches[0].reason).toContain('Тот же тип животного');
     });
 
@@ -361,7 +364,9 @@ describe('Search Routes', () => {
       mockReq.params = { postId: 'source-post-id' };
       await executeHandler('get', '/matches/:postId', mockReq as any, mockRes, mockNext);
 
-      const response = (mockRes.json as jest.Mock).mock.calls[0][0] as { matches: Array<{ reason: string; confidence: number }> };
+      const response = (mockRes.json as jest.Mock).mock.calls[0][0] as {
+        matches: Array<{ reason: string; confidence: number }>;
+      };
       expect(response.matches[0].confidence).toBeLessThanOrEqual(1);
     });
 

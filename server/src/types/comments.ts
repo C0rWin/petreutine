@@ -37,7 +37,7 @@ export enum NotificationType {
   COMMENT_UPVOTE = 'comment_upvote',
   MODERATION_APPROVED = 'moderation_approved',
   MODERATION_REJECTED = 'moderation_rejected',
-  MODERATION_ALERT = 'moderation_alert',  // AI moderation failure alerts for admins
+  MODERATION_ALERT = 'moderation_alert', // AI moderation failure alerts for admins
 }
 
 // ============================================
@@ -135,11 +135,17 @@ export interface UserRole {
 export const createCommentSchema = z.object({
   post_id: z.string().uuid(),
   parent_id: z.string().uuid().nullable().optional(),
-  content: z.string().min(1, 'Комментарий не может быть пустым').max(2000, 'Комментарий слишком длинный'),
+  content: z
+    .string()
+    .min(1, 'Комментарий не может быть пустым')
+    .max(2000, 'Комментарий слишком длинный'),
 });
 
 export const updateCommentSchema = z.object({
-  content: z.string().min(1, 'Комментарий не может быть пустым').max(2000, 'Комментарий слишком длинный'),
+  content: z
+    .string()
+    .min(1, 'Комментарий не может быть пустым')
+    .max(2000, 'Комментарий слишком длинный'),
 });
 
 export const voteSchema = z.object({

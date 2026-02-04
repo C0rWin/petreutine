@@ -114,7 +114,7 @@ const YandexMap: React.FC<YandexMapProps> = ({
           setIsLoading(false);
         }
       })
-      .catch((err) => {
+      .catch(err => {
         console.error('Failed to load Yandex Maps:', err);
         setError(err.message || 'Не удалось загрузить карту');
         setIsLoading(false);
@@ -178,13 +178,13 @@ const YandexMap: React.FC<YandexMapProps> = ({
     if (!navigator.geolocation || !map || !placemark) return;
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         const { latitude, longitude } = position.coords;
         placemark.geometry?.setCoordinates([latitude, longitude]);
         map.setCenter([latitude, longitude], 15);
         reverseGeocode(latitude, longitude);
       },
-      (err) => {
+      err => {
         console.error('Geolocation error:', err);
         setError('Не удалось определить местоположение');
       }
@@ -206,7 +206,7 @@ const YandexMap: React.FC<YandexMapProps> = ({
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             placeholder="Введите адрес или нажмите на карту"
             className="flex-1 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
@@ -224,8 +224,18 @@ const YandexMap: React.FC<YandexMapProps> = ({
           title="Определить моё местоположение"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
           </svg>
         </button>
       </div>

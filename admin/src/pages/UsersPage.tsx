@@ -55,7 +55,7 @@ export function UsersPage() {
     {
       key: 'user',
       header: 'Пользователь',
-      render: (user) => (
+      render: user => (
         <div className="flex items-center gap-3">
           {user.avatar_url ? (
             <img
@@ -81,7 +81,7 @@ export function UsersPage() {
       key: 'status',
       header: 'Статус',
       width: '180px',
-      render: (user) => (
+      render: user => (
         <div className="flex items-center gap-1 flex-wrap">
           {getUserStatusBadges(user.is_admin, user.ban_type)}
         </div>
@@ -91,21 +91,17 @@ export function UsersPage() {
       key: 'posts_count',
       header: 'Публикации',
       width: '100px',
-      render: (user) => (
-        <span className="text-gray-600">{user.posts_count}</span>
-      ),
+      render: user => <span className="text-gray-600">{user.posts_count}</span>,
     },
     {
       key: 'comments_count',
       header: 'Комментарии',
       width: '100px',
-      render: (user) => (
+      render: user => (
         <div>
           <span className="text-gray-600">{user.comments_count}</span>
           {user.flagged_comments_count > 0 && (
-            <span className="ml-1 text-xs text-red-500">
-              ({user.flagged_comments_count} жалоб)
-            </span>
+            <span className="ml-1 text-xs text-red-500">({user.flagged_comments_count} жалоб)</span>
           )}
         </div>
       ),
@@ -114,7 +110,7 @@ export function UsersPage() {
       key: 'last_login_at',
       header: 'Последний вход',
       width: '140px',
-      render: (user) => (
+      render: user => (
         <span className="text-gray-500 text-sm">{formatDate(user.last_login_at)}</span>
       ),
     },
@@ -122,9 +118,7 @@ export function UsersPage() {
       key: 'created_at',
       header: 'Регистрация',
       width: '120px',
-      render: (user) => (
-        <span className="text-gray-500 text-sm">{formatDate(user.created_at)}</span>
-      ),
+      render: user => <span className="text-gray-500 text-sm">{formatDate(user.created_at)}</span>,
     },
   ];
 
@@ -144,7 +138,7 @@ export function UsersPage() {
         />
         <select
           value={banFilter}
-          onChange={(e) => setBanFilter(e.target.value)}
+          onChange={e => setBanFilter(e.target.value)}
           className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-coral-500"
         >
           <option value="all">Все пользователи</option>
@@ -159,8 +153,8 @@ export function UsersPage() {
         columns={columns}
         data={users}
         isLoading={isLoading}
-        keyExtractor={(user) => user.id}
-        onRowClick={(user) => navigate(`/users/${user.id}`)}
+        keyExtractor={user => user.id}
+        onRowClick={user => navigate(`/users/${user.id}`)}
         emptyMessage="Пользователи не найдены"
       />
 

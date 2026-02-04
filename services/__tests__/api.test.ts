@@ -40,11 +40,14 @@ describe('ApiService', () => {
 
       const result = await api.getPosts();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/posts', expect.objectContaining({
-        headers: expect.objectContaining({
-          'Content-Type': 'application/json',
-        }),
-      }));
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/posts',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
       expect(result.data).toEqual(mockPosts);
     });
 
@@ -123,10 +126,13 @@ describe('ApiService', () => {
         location: 'Moscow',
       });
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/posts', expect.objectContaining({
-        method: 'POST',
-        body: expect.any(String),
-      }));
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/posts',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.any(String),
+        })
+      );
       expect(result.data).toEqual(mockPost);
     });
   });
@@ -141,9 +147,12 @@ describe('ApiService', () => {
 
       const result = await api.updatePost('post-1', { title: 'Updated Title' });
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/posts/post-1', expect.objectContaining({
-        method: 'PUT',
-      }));
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/posts/post-1',
+        expect.objectContaining({
+          method: 'PUT',
+        })
+      );
       expect(result.data).toEqual(mockPost);
     });
   });
@@ -158,9 +167,12 @@ describe('ApiService', () => {
 
       await api.deletePost('post-1');
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/posts/post-1', expect.objectContaining({
-        method: 'DELETE',
-      }));
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/posts/post-1',
+        expect.objectContaining({
+          method: 'DELETE',
+        })
+      );
     });
   });
 
@@ -237,9 +249,12 @@ describe('ApiService', () => {
 
       const result = await api.logout();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({
-        method: 'POST',
-      }));
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/auth/logout',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
       expect(result.data).toEqual({ success: true });
     });
   });
@@ -314,7 +329,11 @@ describe('ApiService', () => {
 
   describe('uploadImage', () => {
     it('should upload an image', async () => {
-      const mockResponse = { url: 'https://example.com/image.jpg', thumbnail: 'https://example.com/thumb.jpg', isBase64: false };
+      const mockResponse = {
+        url: 'https://example.com/image.jpg',
+        thumbnail: 'https://example.com/thumb.jpg',
+        isBase64: false,
+      };
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockResponse),
@@ -323,10 +342,13 @@ describe('ApiService', () => {
       const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
       const result = await api.uploadImage(file);
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/upload', expect.objectContaining({
-        method: 'POST',
-        body: expect.any(FormData),
-      }));
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/upload',
+        expect.objectContaining({
+          method: 'POST',
+          body: expect.any(FormData),
+        })
+      );
       expect(result.data).toEqual(mockResponse);
     });
 

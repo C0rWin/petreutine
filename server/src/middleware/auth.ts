@@ -42,7 +42,10 @@ export function verifyToken(token: string): JwtPayload | null {
 }
 
 // Check if ban has expired and clear it if so
-async function checkAndClearExpiredBan(userId: string, banExpiresAt: Date | null): Promise<boolean> {
+async function checkAndClearExpiredBan(
+  userId: string,
+  banExpiresAt: Date | null
+): Promise<boolean> {
   if (banExpiresAt && new Date(banExpiresAt) < new Date()) {
     await query(
       `UPDATE users SET
@@ -118,8 +121,9 @@ export async function requireAuth(
     }
 
     // Update last_login_at (fire and forget, don't wait)
-    query('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1', [payload.userId])
-      .catch(err => console.error('Failed to update last_login_at:', err));
+    query('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1', [
+      payload.userId,
+    ]).catch(err => console.error('Failed to update last_login_at:', err));
 
     req.user = user;
     req.userId = payload.userId;

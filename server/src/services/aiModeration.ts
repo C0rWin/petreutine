@@ -82,11 +82,15 @@ async function notifyAdminsOfModerationFailure(
       );
     }
 
-    logModerationEvent(LogSeverity.INFO, `Notified ${admins.rows.length} admins of moderation failure`, {
-      commentId,
-      content,
-      error,
-    });
+    logModerationEvent(
+      LogSeverity.INFO,
+      `Notified ${admins.rows.length} admins of moderation failure`,
+      {
+        commentId,
+        content,
+        error,
+      }
+    );
   } catch (notifyError) {
     // Log but don't fail if notification fails
     console.error('[AI_MOD_ERROR] Failed to notify admins:', notifyError);
@@ -183,9 +187,7 @@ RESPOND IN VALID JSON FORMAT ONLY (no markdown, no backticks):
     });
 
     // Extract text response
-    const responseText = response.content[0].type === 'text'
-      ? response.content[0].text.trim()
-      : '';
+    const responseText = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
 
     // Parse JSON response
     try {

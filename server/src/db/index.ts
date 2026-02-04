@@ -13,8 +13,9 @@ const __dirname = path.dirname(__filename);
 // Development: Relaxed for local databases, strict for remote
 function getSSLConfig(): boolean | { rejectUnauthorized: boolean; ca?: string } {
   const isProduction = process.env.NODE_ENV === 'production';
-  const isLocalDev = process.env.DATABASE_URL?.includes('localhost') ||
-                     process.env.DATABASE_URL?.includes('127.0.0.1');
+  const isLocalDev =
+    process.env.DATABASE_URL?.includes('localhost') ||
+    process.env.DATABASE_URL?.includes('127.0.0.1');
 
   if (isProduction) {
     // Production requires proper SSL verification
@@ -64,7 +65,7 @@ pool.on('connect', () => {
   console.log('Connected to PostgreSQL database');
 });
 
-pool.on('error', (err) => {
+pool.on('error', err => {
   console.error('Unexpected error on idle client', err);
   process.exit(-1);
 });
@@ -89,13 +90,17 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
         query: text.substring(0, 200),
         duration_ms: duration,
         threshold_ms: SLOW_QUERY_THRESHOLD,
-        params_count: params?.length || 0
+        params_count: params?.length || 0,
       });
     }
 
     // Debug logging only in development
     if (process.env.NODE_ENV !== 'production') {
-      console.log('Executed query', { text: text.substring(0, 100), duration, rows: result.rowCount });
+      console.log('Executed query', {
+        text: text.substring(0, 100),
+        duration,
+        rows: result.rowCount,
+      });
     }
 
     return result;
@@ -108,9 +113,7 @@ export async function getClient(): Promise<pg.PoolClient> {
   return pool.connect();
 }
 
-export async function transaction<T>(
-  callback: (client: pg.PoolClient) => Promise<T>
-): Promise<T> {
+export async function transaction<T>(callback: (client: pg.PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -136,7 +139,8 @@ export async function initializeDatabase(): Promise<void> {
     // Run migration files from migrations directory
     const migrationsPath = path.join(__dirname, 'migrations');
     if (fs.existsSync(migrationsPath)) {
-      const migrationFiles = fs.readdirSync(migrationsPath)
+      const migrationFiles = fs
+        .readdirSync(migrationsPath)
         .filter(f => f.endsWith('.sql'))
         .sort();
 

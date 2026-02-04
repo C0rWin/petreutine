@@ -285,8 +285,10 @@ router.get(
       `);
 
       const rates = moderationRates.rows[0];
-      const autoApprovedRate = rates.total > 0 ? (rates.auto_approved_count / rates.total) * 100 : 0;
-      const manualReviewRate = rates.total > 0 ? (rates.manual_review_count / rates.total) * 100 : 0;
+      const autoApprovedRate =
+        rates.total > 0 ? (rates.auto_approved_count / rates.total) * 100 : 0;
+      const manualReviewRate =
+        rates.total > 0 ? (rates.manual_review_count / rates.total) * 100 : 0;
 
       const result: CommentStats = {
         total_comments: basicStats.rows[0].total_comments,

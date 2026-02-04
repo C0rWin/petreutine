@@ -1,8 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { adminApi } from '../services/api';
-import { AdminUserWithStats, AdminPostWithStats, AdminComment, BanHistoryEntry, BanType } from '../types';
-import { getUserStatusBadges, getPostTypeBadge, getCommentStatusBadge } from '../components/common/Badge';
+import {
+  AdminUserWithStats,
+  AdminPostWithStats,
+  AdminComment,
+  BanHistoryEntry,
+  BanType,
+} from '../types';
+import {
+  getUserStatusBadges,
+  getPostTypeBadge,
+  getCommentStatusBadge,
+} from '../components/common/Badge';
 import { DataTable, Column } from '../components/common/DataTable';
 import { Pagination } from '../components/common/Pagination';
 import { ConfirmModal } from '../components/common/ConfirmModal';
@@ -105,7 +115,11 @@ export function UserDetailPage() {
     if (activeTab === 'history') fetchBanHistory();
   }, [activeTab, fetchPosts, fetchComments, fetchBanHistory]);
 
-  const handleBan = async (data: { ban_type: BanType; reason: string; duration_hours?: number }) => {
+  const handleBan = async (data: {
+    ban_type: BanType;
+    reason: string;
+    duration_hours?: number;
+  }) => {
     if (!id) return;
     setIsBanLoading(true);
     const result = await adminApi.banUser(id, data);
@@ -155,40 +169,57 @@ export function UserDetailPage() {
     {
       key: 'title',
       header: 'Публикация',
-      render: (post) => (
+      render: post => (
         <div>
           <p className="font-medium text-gray-900 line-clamp-1">{post.title}</p>
           <p className="text-xs text-gray-500">{post.location}</p>
         </div>
       ),
     },
-    { key: 'type', header: 'Тип', width: '100px', render: (post) => getPostTypeBadge(post.type) },
+    { key: 'type', header: 'Тип', width: '100px', render: post => getPostTypeBadge(post.type) },
     { key: 'comments_count', header: 'Комм.', width: '80px' },
-    { key: 'created_at', header: 'Дата', width: '120px', render: (post) => formatDate(post.created_at).split(',')[0] },
+    {
+      key: 'created_at',
+      header: 'Дата',
+      width: '120px',
+      render: post => formatDate(post.created_at).split(',')[0],
+    },
   ];
 
   const commentsColumns: Column<AdminComment>[] = [
     {
       key: 'content',
       header: 'Комментарий',
-      render: (comment) => (
+      render: comment => (
         <div>
           <p className="text-gray-900 line-clamp-2">{comment.content}</p>
           <p className="text-xs text-gray-500 mt-1">{comment.post_title}</p>
         </div>
       ),
     },
-    { key: 'status', header: 'Статус', width: '120px', render: (c) => getCommentStatusBadge(c.status) },
+    {
+      key: 'status',
+      header: 'Статус',
+      width: '120px',
+      render: c => getCommentStatusBadge(c.status),
+    },
     { key: 'score', header: 'Рейтинг', width: '80px' },
-    { key: 'created_at', header: 'Дата', width: '120px', render: (c) => formatDate(c.created_at).split(',')[0] },
+    {
+      key: 'created_at',
+      header: 'Дата',
+      width: '120px',
+      render: c => formatDate(c.created_at).split(',')[0],
+    },
   ];
 
   const historyColumns: Column<BanHistoryEntry>[] = [
     {
       key: 'action',
       header: 'Действие',
-      render: (entry) => (
-        <span className={`font-medium ${entry.action === 'ban' ? 'text-red-600' : 'text-green-600'}`}>
+      render: entry => (
+        <span
+          className={`font-medium ${entry.action === 'ban' ? 'text-red-600' : 'text-green-600'}`}
+        >
           {entry.action === 'ban' ? 'Блокировка' : 'Разблокировка'}
         </span>
       ),
@@ -196,11 +227,12 @@ export function UserDetailPage() {
     {
       key: 'ban_type',
       header: 'Тип',
-      render: (entry) => entry.ban_type === 'full' ? 'Полный' : entry.ban_type === 'comment' ? 'Комментарии' : '—',
+      render: entry =>
+        entry.ban_type === 'full' ? 'Полный' : entry.ban_type === 'comment' ? 'Комментарии' : '—',
     },
-    { key: 'reason', header: 'Причина', render: (entry) => entry.reason || '—' },
+    { key: 'reason', header: 'Причина', render: entry => entry.reason || '—' },
     { key: 'admin_name', header: 'Админ' },
-    { key: 'created_at', header: 'Дата', render: (entry) => formatDate(entry.created_at) },
+    { key: 'created_at', header: 'Дата', render: entry => formatDate(entry.created_at) },
   ];
 
   if (isLoading) {
@@ -221,8 +253,18 @@ export function UserDetailPage() {
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button onClick={() => navigate('/users')} className="p-2 hover:bg-gray-100 rounded-lg">
-          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-5 h-5 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
         <h1 className="text-2xl font-bold text-gray-900">Профиль пользователя</h1>
@@ -233,10 +275,16 @@ export function UserDetailPage() {
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             {user.avatar_url ? (
-              <img src={user.avatar_url} alt={user.name} className="w-16 h-16 rounded-full object-cover" />
+              <img
+                src={user.avatar_url}
+                alt={user.name}
+                className="w-16 h-16 rounded-full object-cover"
+              />
             ) : (
               <div className="w-16 h-16 rounded-full bg-coral-100 flex items-center justify-center">
-                <span className="text-coral-700 font-bold text-xl">{user.name.charAt(0).toUpperCase()}</span>
+                <span className="text-coral-700 font-bold text-xl">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
               </div>
             )}
             <div>
@@ -251,9 +299,7 @@ export function UserDetailPage() {
                 <p className="text-sm text-red-600 mt-2">
                   Причина: {user.ban_reason}
                   {user.ban_expires_at && (
-                    <span className="ml-2">
-                      (до {formatDate(user.ban_expires_at)})
-                    </span>
+                    <span className="ml-2">(до {formatDate(user.ban_expires_at)})</span>
                   )}
                 </p>
               )}
@@ -315,7 +361,7 @@ export function UserDetailPage() {
             { key: 'posts', label: 'Публикации', count: postsTotal },
             { key: 'comments', label: 'Комментарии', count: commentsTotal },
             { key: 'history', label: 'История банов' },
-          ].map((tab) => (
+          ].map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as Tab)}
@@ -343,8 +389,8 @@ export function UserDetailPage() {
             columns={postsColumns}
             data={posts}
             isLoading={postsLoading}
-            keyExtractor={(p) => p.id}
-            onRowClick={(p) => navigate(`/posts/${p.id}`)}
+            keyExtractor={p => p.id}
+            onRowClick={p => navigate(`/posts/${p.id}`)}
             emptyMessage="Нет публикаций"
           />
           <Pagination
@@ -362,7 +408,7 @@ export function UserDetailPage() {
             columns={commentsColumns}
             data={comments}
             isLoading={commentsLoading}
-            keyExtractor={(c) => c.id}
+            keyExtractor={c => c.id}
             emptyMessage="Нет комментариев"
           />
           <Pagination
@@ -380,7 +426,7 @@ export function UserDetailPage() {
             columns={historyColumns}
             data={banHistory}
             isLoading={historyLoading}
-            keyExtractor={(h) => h.id}
+            keyExtractor={h => h.id}
             emptyMessage="Нет истории"
           />
           <Pagination

@@ -30,7 +30,9 @@ async function addModerationAlertNotificationType(): Promise<void> {
     // or if ADD VALUE already occurred in a concurrent transaction
     const errorMessage = String(error);
     if (errorMessage.includes('does not exist') || errorMessage.includes('already exists')) {
-      console.log('[Migration] notification_type enum update skipped (expected for fresh databases)');
+      console.log(
+        '[Migration] notification_type enum update skipped (expected for fresh databases)'
+      );
     } else {
       console.warn('[Migration] notification_type enum update warning:', error);
     }

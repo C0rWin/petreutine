@@ -131,7 +131,12 @@ export interface UserStats {
   banned_users: number;
   comment_banned_users: number;
   top_posters: Array<{ id: string; name: string; avatar_url: string | null; posts_count: number }>;
-  top_commenters: Array<{ id: string; name: string; avatar_url: string | null; comments_count: number }>;
+  top_commenters: Array<{
+    id: string;
+    name: string;
+    avatar_url: string | null;
+    comments_count: number;
+  }>;
 }
 
 export interface PostStats {

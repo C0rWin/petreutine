@@ -17,7 +17,7 @@ export function payloadTooLargeHandler(
       error: 'Payload Too Large',
       message: `Request body exceeds maximum size of ${maxSizeMB.toFixed(1)}MB`,
       maxSize: err.limit,
-      receivedSize: err.length
+      receivedSize: err.length,
     });
     return;
   }

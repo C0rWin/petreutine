@@ -1,6 +1,7 @@
 # ДомойСкорей
 
-  **[🌐 Открыть приложение](https://petreunite-ipda9.ondigitalocean.app/)**
+**[🌐 Открыть приложение](https://petreunite-ipda9.ondigitalocean.app/)**
+
 </div>
 
 **ДомойСкорей** — это сервис для поиска пропавших и найденных домашних животных. Пользователи могут публиковать объявления о потерянных или найденных питомцах, а система автоматически находит потенциальные совпадения с помощью полнотекстового поиска.
@@ -20,23 +21,27 @@
 ## Технологии
 
 ### Frontend
+
 - React 18 + TypeScript
 - Vite
 - Tailwind CSS
 - Яндекс.Карты API
 
 ### Backend
+
 - Node.js + Express
 - PostgreSQL с полнотекстовым поиском (русский язык)
 - JWT авторизация
 - TypeScript
 
 ### Интеграции
+
 - Яндекс ID (OAuth 2.0)
 - Яндекс.Карты
 - Digital Ocean Spaces (хранение изображений)
 
 ### Инфраструктура
+
 - Digital Ocean App Platform
 - Managed PostgreSQL
 - CDN для изображений
@@ -44,29 +49,34 @@
 ## Локальная разработка
 
 ### Требования
+
 - Node.js 20+
 - PostgreSQL 16+
 
 ### Установка
 
 1. Клонируйте репозиторий:
+
 ```bash
 git clone https://github.com/C0rWin/petreutine.git
 cd petreutine
 ```
 
 2. Установите зависимости frontend:
+
 ```bash
 npm install
 ```
 
 3. Установите зависимости backend:
+
 ```bash
 cd server
 npm install
 ```
 
 4. Создайте базу данных PostgreSQL:
+
 ```bash
 createdb petreunite
 ```
@@ -93,12 +103,15 @@ JWT_SECRET=your_jwt_secret
 6. Настройте Яндекс.Карты:
 
 Создайте файл `.env` в корне проекта:
+
 ```bash
 VITE_YANDEX_MAPS_API_KEY=your_yandex_maps_api_key
 ```
+
 Получите ключ API на https://developer.tech.yandex.ru/
 
 7. Запустите миграции базы данных:
+
 ```bash
 cd server
 npm run db:migrate
@@ -153,35 +166,35 @@ npm run dev
 
 ### Объявления
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/posts` | Получить все объявления |
-| GET | `/api/posts/:id` | Получить объявление по ID |
-| POST | `/api/posts` | Создать объявление |
-| PUT | `/api/posts/:id` | Обновить объявление |
-| DELETE | `/api/posts/:id` | Удалить объявление |
+| Метод  | Путь             | Описание                  |
+| ------ | ---------------- | ------------------------- |
+| GET    | `/api/posts`     | Получить все объявления   |
+| GET    | `/api/posts/:id` | Получить объявление по ID |
+| POST   | `/api/posts`     | Создать объявление        |
+| PUT    | `/api/posts/:id` | Обновить объявление       |
+| DELETE | `/api/posts/:id` | Удалить объявление        |
 
 ### Поиск
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/search?q=...` | Полнотекстовый поиск |
-| GET | `/api/search/matches/:postId` | Найти совпадения |
+| Метод | Путь                          | Описание             |
+| ----- | ----------------------------- | -------------------- |
+| GET   | `/api/search?q=...`           | Полнотекстовый поиск |
+| GET   | `/api/search/matches/:postId` | Найти совпадения     |
 
 ### Авторизация
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| GET | `/api/auth/yandex` | Начать OAuth авторизацию |
-| GET | `/api/auth/yandex/callback` | OAuth callback |
-| GET | `/api/auth/me` | Получить текущего пользователя |
-| POST | `/api/auth/logout` | Выйти из системы |
+| Метод | Путь                        | Описание                       |
+| ----- | --------------------------- | ------------------------------ |
+| GET   | `/api/auth/yandex`          | Начать OAuth авторизацию       |
+| GET   | `/api/auth/yandex/callback` | OAuth callback                 |
+| GET   | `/api/auth/me`              | Получить текущего пользователя |
+| POST  | `/api/auth/logout`          | Выйти из системы               |
 
 ### Загрузка файлов
 
-| Метод | Путь | Описание |
-|-------|------|----------|
-| POST | `/api/upload/image` | Загрузить изображение |
+| Метод | Путь                | Описание              |
+| ----- | ------------------- | --------------------- |
+| POST  | `/api/upload/image` | Загрузить изображение |
 
 ## Развёртывание
 

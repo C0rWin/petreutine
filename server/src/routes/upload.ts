@@ -19,7 +19,8 @@ const s3Client = new S3Client({
 });
 
 const BUCKET_NAME = process.env.DO_SPACES_BUCKET || 'petreunite';
-const CDN_URL = process.env.DO_SPACES_CDN_URL || `https://${BUCKET_NAME}.fra1.cdn.digitaloceanspaces.com`;
+const CDN_URL =
+  process.env.DO_SPACES_CDN_URL || `https://${BUCKET_NAME}.fra1.cdn.digitaloceanspaces.com`;
 
 // Configure multer for memory storage
 const upload = multer({
@@ -88,10 +89,7 @@ async function processAndUpload(
 }
 
 // Generate thumbnail
-async function generateThumbnail(
-  buffer: Buffer,
-  key: string
-): Promise<string> {
+async function generateThumbnail(buffer: Buffer, key: string): Promise<string> {
   const thumbKey = key.replace('uploads/', 'thumbs/');
 
   const thumbnailBuffer = await sharp(buffer)
@@ -161,37 +159,41 @@ router.post(
 );
 
 // Delete image (for cleanup)
-router.delete('/:key(*)', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const { key } = req.params;
-    const userId = req.userId!;
+router.delete(
+  '/:key(*)',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { key } = req.params;
+      const userId = req.userId!;
 
-    // Security check - only allow deleting own uploads
-    if (!key.includes(`uploads/${userId}/`)) {
-      throw new AppError('Нет прав на удаление этого файла', 403);
+      // Security check - only allow deleting own uploads
+      if (!key.includes(`uploads/${userId}/`)) {
+        throw new AppError('Нет прав на удаление этого файла', 403);
+      }
+
+      // Delete main image
+      await s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: key,
+        })
+      );
+
+      // Delete thumbnail
+      const thumbKey = key.replace('uploads/', 'thumbs/');
+      await s3Client.send(
+        new DeleteObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: thumbKey,
+        })
+      );
+
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
     }
-
-    // Delete main image
-    await s3Client.send(
-      new DeleteObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: key,
-      })
-    );
-
-    // Delete thumbnail
-    const thumbKey = key.replace('uploads/', 'thumbs/');
-    await s3Client.send(
-      new DeleteObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: thumbKey,
-      })
-    );
-
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 export default router;

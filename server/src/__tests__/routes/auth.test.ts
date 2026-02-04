@@ -2,7 +2,8 @@ import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals
 import { createMockRequest, createMockResponse, createMockNext, mockUser } from '../setup.js';
 
 // Create mocks before importing the router
-const mockQueryFn = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
+const mockQueryFn =
+  jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
 const mockGenerateToken = jest.fn().mockReturnValue('test-jwt-token');
 const mockVerifyToken = jest.fn();
 
@@ -40,7 +41,7 @@ beforeEach(() => {
   jest.clearAllMocks();
 
   // Default mock implementation for OAuth state validation and cleanup
-  mockQueryFn.mockImplementation(async (sql) => {
+  mockQueryFn.mockImplementation(async sql => {
     if (sql.includes('cleanup_expired_oauth_states')) {
       return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
     }
@@ -104,8 +105,8 @@ describe('Auth Routes', () => {
   describe('GET /yandex - Initiate OAuth', () => {
     it('should be configured with correct handler', async () => {
       // Test that the route exists
-      const layer = (authRouter as any).stack.find((l: any) =>
-        l.route?.path === '/yandex' && l.route?.methods?.get
+      const layer = (authRouter as any).stack.find(
+        (l: any) => l.route?.path === '/yandex' && l.route?.methods?.get
       );
       expect(layer).toBeDefined();
     });
@@ -141,7 +142,7 @@ describe('Auth Routes', () => {
       mockReq.query = { code: 'auth-code', state: 'valid-state-token' };
 
       // Mock OAuth state validation to succeed
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
           return { rows: [{ redirect_to: null }], rowCount: 1 };
         }
@@ -165,7 +166,7 @@ describe('Auth Routes', () => {
       mockReq.query = { code: 'auth-code', state: 'valid-state-token' };
 
       // Mock OAuth state validation to succeed
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
           return { rows: [{ redirect_to: null }], rowCount: 1 };
         }
@@ -203,7 +204,7 @@ describe('Auth Routes', () => {
         });
 
       // Mock OAuth state validation and subsequent queries
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
           return { rows: [{ redirect_to: null }], rowCount: 1 };
         }
@@ -248,7 +249,7 @@ describe('Auth Routes', () => {
         });
 
       // Mock OAuth state validation and subsequent queries
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
           return { rows: [{ redirect_to: null }], rowCount: 1 };
         }
@@ -274,7 +275,11 @@ describe('Auth Routes', () => {
     });
 
     it('should use display_name if real_name not available', async () => {
-      const userWithoutRealName = { ...yandexUser, real_name: undefined, display_name: 'Display Name' };
+      const userWithoutRealName = {
+        ...yandexUser,
+        real_name: undefined,
+        display_name: 'Display Name',
+      };
       mockReq.query = { code: 'auth-code', state: 'valid-state-token' };
       mockFetch
         .mockResolvedValueOnce({
@@ -287,7 +292,7 @@ describe('Auth Routes', () => {
         });
 
       // Mock OAuth state validation and subsequent queries
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
           return { rows: [{ redirect_to: null }], rowCount: 1 };
         }
@@ -328,7 +333,7 @@ describe('Auth Routes', () => {
         });
 
       // Mock OAuth state validation and subsequent queries
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
           return { rows: [{ redirect_to: null }], rowCount: 1 };
         }
@@ -376,7 +381,7 @@ describe('Auth Routes', () => {
       mockReq.query = { code: 'auth-code', state: 'unknown-state-token' };
 
       // Mock DELETE query to return empty result (state not found)
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
           return { rows: [], rowCount: 0 };
         }
@@ -404,7 +409,7 @@ describe('Auth Routes', () => {
   describe('POST /dev/create-user - Dev user creation', () => {
     it('should create a dev user in development mode', async () => {
       // Mock the SELECT COUNT and INSERT queries
-      mockQueryFn.mockImplementation(async (sql) => {
+      mockQueryFn.mockImplementation(async sql => {
         if (sql.includes('SELECT COUNT(*) as count FROM users')) {
           return { rows: [{ count: '0' }], rowCount: 1 };
         }

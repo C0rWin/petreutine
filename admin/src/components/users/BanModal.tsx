@@ -87,7 +87,12 @@ export function BanModal({ isOpen, onClose, onSubmit, userName, isLoading }: Ban
             className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -99,9 +104,7 @@ export function BanModal({ isOpen, onClose, onSubmit, userName, isLoading }: Ban
         <form onSubmit={handleSubmit}>
           {/* Ban Type */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Тип блокировки
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Тип блокировки</label>
             <div className="flex gap-3">
               <button
                 type="button"
@@ -113,9 +116,7 @@ export function BanModal({ isOpen, onClose, onSubmit, userName, isLoading }: Ban
                 }`}
               >
                 <p className="font-medium text-gray-900">Полный бан</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Пользователь не сможет войти в систему
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Пользователь не сможет войти в систему</p>
               </button>
               <button
                 type="button"
@@ -127,20 +128,16 @@ export function BanModal({ isOpen, onClose, onSubmit, userName, isLoading }: Ban
                 }`}
               >
                 <p className="font-medium text-gray-900">Бан комментариев</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Пользователь не сможет комментировать
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Пользователь не сможет комментировать</p>
               </button>
             </div>
           </div>
 
           {/* Duration */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Длительность
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Длительность</label>
             <div className="flex flex-wrap gap-2 mb-3">
-              {durationPresets.map((preset) => (
+              {durationPresets.map(preset => (
                 <button
                   key={preset.hours}
                   type="button"
@@ -160,7 +157,7 @@ export function BanModal({ isOpen, onClose, onSubmit, userName, isLoading }: Ban
               <input
                 type="number"
                 value={customDuration}
-                onChange={(e) => handleCustomDurationChange(e.target.value)}
+                onChange={e => handleCustomDurationChange(e.target.value)}
                 placeholder="Другое количество часов"
                 className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral-500"
               />
@@ -175,7 +172,7 @@ export function BanModal({ isOpen, onClose, onSubmit, userName, isLoading }: Ban
             </label>
             <textarea
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={e => setReason(e.target.value)}
               placeholder="Опишите причину блокировки..."
               rows={3}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-coral-500 resize-none"

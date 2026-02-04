@@ -32,7 +32,8 @@ jest.unstable_mockModule('fs', () => ({
 }));
 
 // Import after mocks
-const { query, getClient, transaction, initializeDatabase, closePool } = await import('../../db/index.js');
+const { query, getClient, transaction, initializeDatabase, closePool } =
+  await import('../../db/index.js');
 
 describe('Database Layer', () => {
   beforeEach(() => {
@@ -106,7 +107,9 @@ describe('Database Layer', () => {
 
     it('should release client even on error', async () => {
       mockQuery.mockResolvedValue({ rows: [], rowCount: 0 });
-      const callback = jest.fn<(client: any) => Promise<never>>().mockRejectedValue(new Error('Error'));
+      const callback = jest
+        .fn<(client: any) => Promise<never>>()
+        .mockRejectedValue(new Error('Error'));
 
       try {
         await transaction(callback);
@@ -124,10 +127,7 @@ describe('Database Layer', () => {
 
       await initializeDatabase();
 
-      expect(mockReadFileSync).toHaveBeenCalledWith(
-        expect.stringContaining('schema.sql'),
-        'utf-8'
-      );
+      expect(mockReadFileSync).toHaveBeenCalledWith(expect.stringContaining('schema.sql'), 'utf-8');
       expect(mockQuery).toHaveBeenCalledWith('CREATE TABLE test ();');
     });
 

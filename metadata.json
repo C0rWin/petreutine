@@ -1,9 +1,5 @@
 {
   "name": "ДомойСкорей",
   "description": "Сервис для поиска пропавших и найденных домашних животных с интеллектуальным сопоставлением объявлений.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone",
-    "geolocation"
-  ]
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
 }

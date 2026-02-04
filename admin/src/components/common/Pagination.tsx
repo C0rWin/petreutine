@@ -8,13 +8,7 @@ interface PaginationProps {
   onLimitChange?: (limit: number) => void;
 }
 
-export function Pagination({
-  total,
-  limit,
-  offset,
-  onPageChange,
-  onLimitChange,
-}: PaginationProps) {
+export function Pagination({ total, limit, offset, onPageChange, onLimitChange }: PaginationProps) {
   const totalPages = Math.ceil(total / limit);
   const currentPage = Math.floor(offset / limit) + 1;
 
@@ -60,7 +54,7 @@ export function Pagination({
         {onLimitChange && (
           <select
             value={limit}
-            onChange={(e) => onLimitChange(Number(e.target.value))}
+            onChange={e => onLimitChange(Number(e.target.value))}
             className="text-sm border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-coral-500"
           >
             <option value={10}>10 / страница</option>
@@ -78,7 +72,12 @@ export function Pagination({
           className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
 

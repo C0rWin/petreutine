@@ -42,7 +42,9 @@ Object.defineProperty(window, 'history', {
 });
 
 // Test component that uses the hook
-const TestComponent: React.FC<{ onAuthChange?: (isAuthenticated: boolean) => void }> = ({ onAuthChange }) => {
+const TestComponent: React.FC<{ onAuthChange?: (isAuthenticated: boolean) => void }> = ({
+  onAuthChange,
+}) => {
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
 
   React.useEffect(() => {
@@ -137,7 +139,9 @@ describe('AuthContext', () => {
 
     it('clears token when user fetch fails', async () => {
       mockLocalStorage.getItem.mockReturnValue('invalid-token');
-      (api.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({ error: 'Invalid token' });
+      (api.getCurrentUser as ReturnType<typeof vi.fn>).mockResolvedValue({
+        error: 'Invalid token',
+      });
 
       render(
         <AuthProvider>
@@ -256,7 +260,9 @@ describe('AuthContext', () => {
     it('handles auth check exception', async () => {
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockLocalStorage.getItem.mockReturnValue('stored-token');
-      (api.getCurrentUser as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
+      (api.getCurrentUser as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('Network error')
+      );
 
       render(
         <AuthProvider>

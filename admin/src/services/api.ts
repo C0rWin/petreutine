@@ -22,10 +22,7 @@ class AdminApi {
     this.token = token;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
@@ -54,14 +51,16 @@ class AdminApi {
   // USER MANAGEMENT
   // ============================================
 
-  async getUsers(params: {
-    limit?: number;
-    offset?: number;
-    search?: string;
-    sort_by?: 'created_at' | 'last_login_at' | 'name' | 'email';
-    sort_order?: 'asc' | 'desc';
-    ban_status?: 'all' | 'banned' | 'not_banned' | 'comment_banned' | 'full_banned';
-  } = {}): Promise<ApiResponse<PaginatedResponse<AdminUserWithStats>>> {
+  async getUsers(
+    params: {
+      limit?: number;
+      offset?: number;
+      search?: string;
+      sort_by?: 'created_at' | 'last_login_at' | 'name' | 'email';
+      sort_order?: 'asc' | 'desc';
+      ban_status?: 'all' | 'banned' | 'not_banned' | 'comment_banned' | 'full_banned';
+    } = {}
+  ): Promise<ApiResponse<PaginatedResponse<AdminUserWithStats>>> {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) query.set(key, String(value));
@@ -140,17 +139,19 @@ class AdminApi {
   // POST MANAGEMENT
   // ============================================
 
-  async getPosts(params: {
-    limit?: number;
-    offset?: number;
-    search?: string;
-    sort_by?: 'created_at' | 'updated_at' | 'title';
-    sort_order?: 'asc' | 'desc';
-    type?: 'all' | 'LOST' | 'FOUND';
-    status?: 'all' | 'OPEN' | 'RESOLVED';
-    comments_enabled?: 'all' | 'enabled' | 'disabled';
-    user_id?: string;
-  } = {}): Promise<ApiResponse<PaginatedResponse<AdminPostWithStats>>> {
+  async getPosts(
+    params: {
+      limit?: number;
+      offset?: number;
+      search?: string;
+      sort_by?: 'created_at' | 'updated_at' | 'title';
+      sort_order?: 'asc' | 'desc';
+      type?: 'all' | 'LOST' | 'FOUND';
+      status?: 'all' | 'OPEN' | 'RESOLVED';
+      comments_enabled?: 'all' | 'enabled' | 'disabled';
+      user_id?: string;
+    } = {}
+  ): Promise<ApiResponse<PaginatedResponse<AdminPostWithStats>>> {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) query.set(key, String(value));
@@ -206,13 +207,15 @@ class AdminApi {
   // AUDIT LOG
   // ============================================
 
-  async getAuditLog(params: {
-    limit?: number;
-    offset?: number;
-    admin_id?: string;
-    target_type?: 'all' | 'user' | 'post' | 'comment';
-    action?: string;
-  } = {}): Promise<ApiResponse<PaginatedResponse<AuditLogEntry>>> {
+  async getAuditLog(
+    params: {
+      limit?: number;
+      offset?: number;
+      admin_id?: string;
+      target_type?: 'all' | 'user' | 'post' | 'comment';
+      action?: string;
+    } = {}
+  ): Promise<ApiResponse<PaginatedResponse<AuditLogEntry>>> {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) query.set(key, String(value));

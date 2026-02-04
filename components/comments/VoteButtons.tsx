@@ -61,22 +61,13 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 15l7-7 7 7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
         </svg>
       </button>
 
       <span
         className={`font-medium min-w-[2rem] text-center ${
-          score > 0
-            ? 'text-coral-600'
-            : score < 0
-            ? 'text-teal-600'
-            : 'text-gray-500'
+          score > 0 ? 'text-coral-600' : score < 0 ? 'text-teal-600' : 'text-gray-500'
         } ${compact ? 'text-xs' : 'text-sm'}`}
       >
         {score}
@@ -99,12 +90,7 @@ export const VoteButtons: React.FC<VoteButtonsProps> = ({
           stroke="currentColor"
           viewBox="0 0 24 24"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
     </div>

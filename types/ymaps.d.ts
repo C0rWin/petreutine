@@ -44,7 +44,10 @@ declare namespace ymaps {
       add(type: string, callback: (e: IEvent) => void): void;
     };
     setCenter(center: [number, number], zoom?: number): void;
-    setBounds(bounds: [[number, number], [number, number]], options?: { checkZoomRange?: boolean }): void;
+    setBounds(
+      bounds: [[number, number], [number, number]],
+      options?: { checkZoomRange?: boolean }
+    ): void;
     destroy(): void;
   }
 

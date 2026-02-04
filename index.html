@@ -1,9 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="ДомойСкорей - сервис для поиска пропавших и найденных домашних животных" />
+    <meta
+      name="description"
+      content="ДомойСкорей - сервис для поиска пропавших и найденных домашних животных"
+    />
     <title>ДомойСкорей - Найдите своего питомца</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -42,7 +45,7 @@
                 300: '#ffe66d',
                 400: '#fbbf24',
                 500: '#f59e0b',
-              }
+              },
             },
             animation: {
               'pulse-urgent': 'pulse-urgent 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -54,20 +57,23 @@
                 '0%, 100%': { opacity: '1', transform: 'scale(1)' },
                 '50%': { opacity: '0.8', transform: 'scale(1.05)' },
               },
-              'fadeIn': {
+              fadeIn: {
                 '0%': { opacity: '0' },
                 '100%': { opacity: '1' },
               },
-              'slideUp': {
+              slideUp: {
                 '0%': { opacity: '0', transform: 'translateY(10px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
-              }
-            }
-          }
-        }
-      }
+              },
+            },
+          },
+        },
+      };
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       body {
         font-family: 'Inter', sans-serif;
@@ -79,7 +85,9 @@
       }
       .card-hover:hover {
         transform: translateY(-4px) scale(1.02);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
       }
       .skeleton {
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
@@ -87,11 +95,20 @@
         animation: skeleton-loading 1.5s infinite;
       }
       @keyframes skeleton-loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
       }
       .gradient-overlay {
-        background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 40%, transparent 100%);
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.7) 0%,
+          rgba(0, 0, 0, 0.3) 40%,
+          transparent 100%
+        );
       }
     </style>
   </head>

@@ -10,7 +10,8 @@ const router = Router();
 // Yandex OAuth configuration
 const YANDEX_CLIENT_ID = process.env.YANDEX_CLIENT_ID || '';
 const YANDEX_CLIENT_SECRET = process.env.YANDEX_CLIENT_SECRET || '';
-const YANDEX_REDIRECT_URI = process.env.YANDEX_REDIRECT_URI || 'http://localhost:3001/api/auth/yandex/callback';
+const YANDEX_REDIRECT_URI =
+  process.env.YANDEX_REDIRECT_URI || 'http://localhost:3001/api/auth/yandex/callback';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 // Yandex OAuth URLs
@@ -55,7 +56,9 @@ async function createOAuthState(redirectTo?: string): Promise<string> {
 }
 
 // Validate and consume OAuth state (single-use, atomic)
-async function validateAndConsumeOAuthState(stateToken: string): Promise<{ valid: boolean; redirectTo: string | null }> {
+async function validateAndConsumeOAuthState(
+  stateToken: string
+): Promise<{ valid: boolean; redirectTo: string | null }> {
   // Atomic: DELETE and return in one operation (prevents race conditions)
   const result = await query<{ redirect_to: string | null }>(
     `DELETE FROM oauth_states
@@ -147,9 +150,8 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
     }
 
     // Determine redirect URL based on validated state
-    const redirectUrl = stateValidation.redirectTo === 'admin'
-      ? `${FRONTEND_URL}/admin/login`
-      : FRONTEND_URL;
+    const redirectUrl =
+      stateValidation.redirectTo === 'admin' ? `${FRONTEND_URL}/admin/login` : FRONTEND_URL;
 
     // Exchange code for access token
     const tokenResponse = await fetch(YANDEX_TOKEN_URL, {
@@ -173,7 +175,7 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    const tokenData = await tokenResponse.json() as YandexTokenResponse;
+    const tokenData = (await tokenResponse.json()) as YandexTokenResponse;
 
     // Get user info from Yandex
     const userInfoResponse = await fetch(`${YANDEX_USER_INFO_URL}?format=json`, {
@@ -189,10 +191,11 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    const yandexUser = await userInfoResponse.json() as YandexUserInfo;
+    const yandexUser = (await userInfoResponse.json()) as YandexUserInfo;
 
     // Build user name
-    const userName = yandexUser.real_name ||
+    const userName =
+      yandexUser.real_name ||
       yandexUser.display_name ||
       (yandexUser.first_name && yandexUser.last_name
         ? `${yandexUser.first_name} ${yandexUser.last_name}`
@@ -206,10 +209,9 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
     // Find or create user in database
     let user: User;
 
-    const existingUser = await query<User>(
-      'SELECT * FROM users WHERE yandex_id = $1',
-      [yandexUser.id]
-    );
+    const existingUser = await query<User>('SELECT * FROM users WHERE yandex_id = $1', [
+      yandexUser.id,
+    ]);
 
     if (existingUser.rows.length > 0) {
       // Update existing user
@@ -223,9 +225,7 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       user = updateResult.rows[0];
     } else {
       // Check if this will be the first user (for auto-admin)
-      const userCountResult = await query<{ count: string }>(
-        'SELECT COUNT(*) as count FROM users'
-      );
+      const userCountResult = await query<{ count: string }>('SELECT COUNT(*) as count FROM users');
       const isFirstUser = parseInt(userCountResult.rows[0].count, 10) === 0;
 
       // Create new user
@@ -239,10 +239,7 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
 
       // Auto-grant admin role to first user
       if (isFirstUser) {
-        await query(
-          `INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')`,
-          [user.id]
-        );
+        await query(`INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')`, [user.id]);
         console.log(`First user ${user.email} auto-granted admin role`);
       }
     }
@@ -280,9 +277,7 @@ if (process.env.NODE_ENV !== 'production') {
       }
 
       // Check if this will be the first user (for auto-admin)
-      const userCountResult = await query<{ count: string }>(
-        'SELECT COUNT(*) as count FROM users'
-      );
+      const userCountResult = await query<{ count: string }>('SELECT COUNT(*) as count FROM users');
       const isFirstUser = parseInt(userCountResult.rows[0].count, 10) === 0;
 
       const yandexId = `dev_${Date.now()}`;
@@ -298,10 +293,7 @@ if (process.env.NODE_ENV !== 'production') {
 
       // Auto-grant admin role to first user
       if (isFirstUser) {
-        await query(
-          `INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')`,
-          [user.id]
-        );
+        await query(`INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')`, [user.id]);
         console.log(`First user ${user.email} auto-granted admin role`);
       }
 

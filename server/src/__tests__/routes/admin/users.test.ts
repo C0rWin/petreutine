@@ -6,15 +6,16 @@ const SQL_INJECTION_PAYLOADS = [
   "'; DROP TABLE users; --",
   "' OR '1'='1",
   "admin'--",
-  "1 UNION SELECT * FROM users",
-  "-1 OR 1=1",
+  '1 UNION SELECT * FROM users',
+  '-1 OR 1=1',
   "test'; DELETE FROM users WHERE '1'='1",
-  "1; SELECT * FROM pg_tables;--",
+  '1; SELECT * FROM pg_tables;--',
   "' AND SLEEP(5)--",
 ];
 
 // Create mocks before importing the router
-const mockQueryFn = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
+const mockQueryFn =
+  jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
 
 jest.unstable_mockModule('../../../db/index.js', () => ({
   query: mockQueryFn,
@@ -257,7 +258,7 @@ describe('Admin Users Query Building', () => {
   });
 
   describe('SQL Injection Prevention', () => {
-    SQL_INJECTION_PAYLOADS.forEach((payload) => {
+    SQL_INJECTION_PAYLOADS.forEach(payload => {
       it(`should reject SQL injection in search: "${payload.substring(0, 25)}..."`, async () => {
         mockQueryFn.mockReset();
         mockQueryFn
@@ -280,9 +281,7 @@ describe('Admin Users Query Building', () => {
 
           // If params exist, verify the payload is properly parameterized
           if (params && params.length > 0) {
-            const searchParam = params.find(
-              (p) => typeof p === 'string' && p.includes('%')
-            );
+            const searchParam = params.find(p => typeof p === 'string' && p.includes('%'));
             if (searchParam) {
               // Payload should be wrapped in % for LIKE
               expect(searchParam).toBe(`%${payload}%`);
@@ -382,12 +381,12 @@ describe('Admin Users Query Building', () => {
 
       // Check that no string interpolation is used in WHERE clauses
       const unsafePatterns = [
-        /WHERE.*\$\{/g,        // Template literal interpolation
-        /`.*WHERE.*\+/g,       // String concatenation in template
-        /'.*WHERE.*'\s*\+/g,   // String concatenation
+        /WHERE.*\$\{/g, // Template literal interpolation
+        /`.*WHERE.*\+/g, // String concatenation in template
+        /'.*WHERE.*'\s*\+/g, // String concatenation
       ];
 
-      unsafePatterns.forEach((pattern) => {
+      unsafePatterns.forEach(pattern => {
         const matches = usersContent.match(pattern);
         expect(matches).toBeNull();
       });

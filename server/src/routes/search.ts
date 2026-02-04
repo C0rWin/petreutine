@@ -155,10 +155,12 @@ router.get('/matches/:postId', async (req: Request, res: Response, next: NextFun
     const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
 
     // Get the source post
-    const sourceResult = await query<{ type: string; animal_type: string; description: string; location: string }>(
-      'SELECT type, animal_type, description, location FROM posts WHERE id = $1',
-      [postId]
-    );
+    const sourceResult = await query<{
+      type: string;
+      animal_type: string;
+      description: string;
+      location: string;
+    }>('SELECT type, animal_type, description, location FROM posts WHERE id = $1', [postId]);
 
     if (sourceResult.rows.length === 0) {
       res.status(404).json({ error: 'Post not found' });
@@ -203,7 +205,7 @@ router.get('/matches/:postId', async (req: Request, res: Response, next: NextFun
     );
 
     res.json({
-      matches: matchResult.rows.map((row) => ({
+      matches: matchResult.rows.map(row => ({
         ...row,
         confidence: Math.min(row.match_score, 1),
         reason: generateMatchReason(source, row),

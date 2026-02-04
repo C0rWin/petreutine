@@ -34,21 +34,23 @@ app.set('trust proxy', 1);
 app.use(httpsRedirect);
 
 // Security middleware - Helmet with enhanced config
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://api-maps.yandex.ru"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https://api-maps.yandex.ru", "https://oauth.yandex.ru"],
-      frameSrc: ["'none'"],
-      objectSrc: ["'none'"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://api-maps.yandex.ru'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+        connectSrc: ["'self'", 'https://api-maps.yandex.ru', 'https://oauth.yandex.ru'],
+        frameSrc: ["'none'"],
+        objectSrc: ["'none'"],
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false, // Allow embedding maps
-}));
+    crossOriginEmbedderPolicy: false, // Allow embedding maps
+  })
+);
 
 // Additional security headers
 app.use(securityHeaders);
@@ -57,12 +59,14 @@ app.use(securityHeaders);
 app.use(requestLogger);
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
 // Large body parser for upload routes (must be before global parser)
 app.use('/api/upload', largeBodyParser);
@@ -175,7 +179,10 @@ app.post('/internal/db-reset', async (req, res) => {
 
     await pool.end();
 
-    res.json({ success: true, message: 'Database reset complete. Restart the app to recreate schema.' });
+    res.json({
+      success: true,
+      message: 'Database reset complete. Restart the app to recreate schema.',
+    });
   } catch (error) {
     console.error('Database reset error:', error);
     res.status(500).json({ error: 'Database reset failed', details: String(error) });
@@ -207,7 +214,7 @@ app.use('/admin', adminRouter);
 
 // Error handling
 app.use(notFoundHandler);
-app.use(payloadTooLargeHandler);  // Handle 413 with helpful message
+app.use(payloadTooLargeHandler); // Handle 413 with helpful message
 app.use(errorHandler);
 
 // Start server

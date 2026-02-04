@@ -80,11 +80,7 @@ export const requireAdmin = requireRole('admin');
 /**
  * Optional role check - attaches roles to request if authenticated
  */
-export async function attachRoles(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) {
+export async function attachRoles(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     if (req.userId) {
       req.userRoles = await getUserRoles(req.userId);

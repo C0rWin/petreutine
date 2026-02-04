@@ -23,16 +23,11 @@ export class AppError extends Error {
   }
 }
 
-export function errorHandler(
-  err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-): void {
+export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
   if (err instanceof ZodError) {
     res.status(400).json({
       error: 'Validation error',
-      details: err.errors.map((e) => ({
+      details: err.errors.map(e => ({
         field: e.path.join('.'),
         message: e.message,
       })),
@@ -50,9 +45,7 @@ export function errorHandler(
   console.error('Unexpected error:', err);
 
   res.status(500).json({
-    error: process.env.NODE_ENV === 'production'
-      ? 'Internal server error'
-      : err.message,
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
   });
 }
 

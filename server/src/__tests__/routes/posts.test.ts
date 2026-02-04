@@ -1,10 +1,17 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { Router, Response, NextFunction, Request } from 'express';
-import { createMockRequest, createMockResponse, createMockNext, mockUser, mockPost } from '../setup.js';
+import {
+  createMockRequest,
+  createMockResponse,
+  createMockNext,
+  mockUser,
+  mockPost,
+} from '../setup.js';
 import { PostType, AnimalType, PostStatus, PetPostWithUser } from '../../types/index.js';
 
 // Create mocks before importing the router
-const mockQueryFn = jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
+const mockQueryFn =
+  jest.fn<(sql: string, params?: unknown[]) => Promise<{ rows: any[]; rowCount: number }>>();
 
 jest.unstable_mockModule('../../db/index.js', () => ({
   query: mockQueryFn,
@@ -154,10 +161,9 @@ describe('Posts Routes', () => {
 
       await executeHandler('get', '/my', mockReq as any, mockRes, mockNext);
 
-      expect(mockQueryFn).toHaveBeenCalledWith(
-        expect.stringContaining('WHERE p.user_id = $1'),
-        [mockUser.id]
-      );
+      expect(mockQueryFn).toHaveBeenCalledWith(expect.stringContaining('WHERE p.user_id = $1'), [
+        mockUser.id,
+      ]);
       expect(mockRes.json).toHaveBeenCalledWith({
         posts,
         total: 1,
@@ -318,7 +324,10 @@ describe('Posts Routes', () => {
 
     it('should update status to RESOLVED', async () => {
       mockQueryFn.mockResolvedValueOnce({ rows: [{ user_id: mockUser.id }], rowCount: 1 });
-      mockQueryFn.mockResolvedValueOnce({ rows: [{ ...mockPost, status: PostStatus.RESOLVED }], rowCount: 1 });
+      mockQueryFn.mockResolvedValueOnce({
+        rows: [{ ...mockPost, status: PostStatus.RESOLVED }],
+        rowCount: 1,
+      });
 
       mockReq.params = { id: mockPost.id };
       mockReq.body = { status: PostStatus.RESOLVED };

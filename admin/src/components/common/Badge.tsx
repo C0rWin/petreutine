@@ -48,23 +48,31 @@ export function getUserStatusBadges(isAdmin: boolean, banType: string | null) {
 
   if (isAdmin) {
     badges.push(
-      <Badge key="admin" variant="info">Администратор</Badge>
+      <Badge key="admin" variant="info">
+        Администратор
+      </Badge>
     );
   }
 
   if (banType === 'full') {
     badges.push(
-      <Badge key="ban" variant="danger">Заблокирован</Badge>
+      <Badge key="ban" variant="danger">
+        Заблокирован
+      </Badge>
     );
   } else if (banType === 'comment') {
     badges.push(
-      <Badge key="ban" variant="warning">Бан комментариев</Badge>
+      <Badge key="ban" variant="warning">
+        Бан комментариев
+      </Badge>
     );
   }
 
   if (badges.length === 0) {
     badges.push(
-      <Badge key="active" variant="success">Активен</Badge>
+      <Badge key="active" variant="success">
+        Активен
+      </Badge>
     );
   }
 

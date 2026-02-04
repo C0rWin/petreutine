@@ -66,12 +66,15 @@ router.get('/', async (req: AuthenticatedRequest, res: Response, next: NextFunct
 });
 
 // Get current user's posts - requires authentication
-router.get('/my', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const userId = req.userId!;
+router.get(
+  '/my',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!;
 
-    const result = await query<PetPostWithUser>(
-      `
+      const result = await query<PetPostWithUser>(
+        `
       SELECT
         p.*,
         json_build_object(
@@ -87,17 +90,18 @@ router.get('/my', requireAuth, async (req: AuthenticatedRequest, res: Response, 
       WHERE p.user_id = $1
       ORDER BY p.created_at DESC
     `,
-      [userId]
-    );
+        [userId]
+      );
 
-    res.json({
-      posts: result.rows,
-      total: result.rowCount,
-    });
-  } catch (error) {
-    next(error);
+      res.json({
+        posts: result.rows,
+        total: result.rowCount,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // Get single post by ID - public
 router.get('/:id', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -134,13 +138,17 @@ router.get('/:id', async (req: AuthenticatedRequest, res: Response, next: NextFu
 });
 
 // Create new post - requires authentication + rate limiting
-router.post('/', createPostLimiter, requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const userId = req.userId!;
-    const data: CreatePostInput = createPostSchema.parse(req.body);
+router.post(
+  '/',
+  createPostLimiter,
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!;
+      const data: CreatePostInput = createPostSchema.parse(req.body);
 
-    const result = await query<PetPostWithUser>(
-      `
+      const result = await query<PetPostWithUser>(
+        `
       WITH inserted_post AS (
         INSERT INTO posts (
           user_id, type, animal_type, title, description,
@@ -162,64 +170,71 @@ router.post('/', createPostLimiter, requireAuth, async (req: AuthenticatedReques
       FROM inserted_post p
       JOIN users u ON p.user_id = u.id
     `,
-      [
-        userId,
-        data.type,
-        data.animal_type,
-        data.title,
-        data.description,
-        data.location,
-        data.latitude || null,
-        data.longitude || null,
-        data.contact_info,
-        data.reward || null,
-        data.image_url || null,
-      ]
-    );
+        [
+          userId,
+          data.type,
+          data.animal_type,
+          data.title,
+          data.description,
+          data.location,
+          data.latitude || null,
+          data.longitude || null,
+          data.contact_info,
+          data.reward || null,
+          data.image_url || null,
+        ]
+      );
 
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    next(error);
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // Update post - requires authentication and ownership
-router.put('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    const userId = req.userId!;
+router.put(
+  '/:id',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const userId = req.userId!;
 
-    // Check ownership
-    const ownerCheck = await query<{ user_id: string }>('SELECT user_id FROM posts WHERE id = $1', [id]);
-    if (ownerCheck.rows.length === 0) {
-      throw new AppError('Объявление не найдено', 404);
-    }
-    if (ownerCheck.rows[0].user_id !== userId) {
-      throw new AppError('Нет прав на редактирование этого объявления', 403);
-    }
-
-    const data: UpdatePostInput = updatePostSchema.parse(req.body);
-
-    // Build dynamic update query
-    const updates: string[] = [];
-    const values: unknown[] = [];
-    let paramIndex = 1;
-
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined) {
-        updates.push(`${key} = $${paramIndex++}`);
-        values.push(value);
+      // Check ownership
+      const ownerCheck = await query<{ user_id: string }>(
+        'SELECT user_id FROM posts WHERE id = $1',
+        [id]
+      );
+      if (ownerCheck.rows.length === 0) {
+        throw new AppError('Объявление не найдено', 404);
       }
-    });
+      if (ownerCheck.rows[0].user_id !== userId) {
+        throw new AppError('Нет прав на редактирование этого объявления', 403);
+      }
 
-    if (updates.length === 0) {
-      throw new AppError('Нет полей для обновления', 400);
-    }
+      const data: UpdatePostInput = updatePostSchema.parse(req.body);
 
-    values.push(id);
+      // Build dynamic update query
+      const updates: string[] = [];
+      const values: unknown[] = [];
+      let paramIndex = 1;
 
-    const result = await query<PetPostWithUser>(
-      `
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined) {
+          updates.push(`${key} = $${paramIndex++}`);
+          values.push(value);
+        }
+      });
+
+      if (updates.length === 0) {
+        throw new AppError('Нет полей для обновления', 400);
+      }
+
+      values.push(id);
+
+      const result = await query<PetPostWithUser>(
+        `
       WITH updated_post AS (
         UPDATE posts
         SET ${updates.join(', ')}
@@ -239,36 +254,44 @@ router.put('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response,
       FROM updated_post p
       JOIN users u ON p.user_id = u.id
     `,
-      values
-    );
+        values
+      );
 
-    res.json(result.rows[0]);
-  } catch (error) {
-    next(error);
+      res.json(result.rows[0]);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 // Delete post - requires authentication and ownership
-router.delete('/:id', requireAuth, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    const userId = req.userId!;
+router.delete(
+  '/:id',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const userId = req.userId!;
 
-    // Check ownership
-    const ownerCheck = await query<{ user_id: string }>('SELECT user_id FROM posts WHERE id = $1', [id]);
-    if (ownerCheck.rows.length === 0) {
-      throw new AppError('Объявление не найдено', 404);
+      // Check ownership
+      const ownerCheck = await query<{ user_id: string }>(
+        'SELECT user_id FROM posts WHERE id = $1',
+        [id]
+      );
+      if (ownerCheck.rows.length === 0) {
+        throw new AppError('Объявление не найдено', 404);
+      }
+      if (ownerCheck.rows[0].user_id !== userId) {
+        throw new AppError('Нет прав на удаление этого объявления', 403);
+      }
+
+      await query('DELETE FROM posts WHERE id = $1', [id]);
+
+      res.status(204).send();
+    } catch (error) {
+      next(error);
     }
-    if (ownerCheck.rows[0].user_id !== userId) {
-      throw new AppError('Нет прав на удаление этого объявления', 403);
-    }
-
-    await query('DELETE FROM posts WHERE id = $1', [id]);
-
-    res.status(204).send();
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 export default router;

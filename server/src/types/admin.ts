@@ -127,7 +127,12 @@ export interface UserStats {
   banned_users: number;
   comment_banned_users: number;
   top_posters: Array<{ id: string; name: string; avatar_url: string | null; posts_count: number }>;
-  top_commenters: Array<{ id: string; name: string; avatar_url: string | null; comments_count: number }>;
+  top_commenters: Array<{
+    id: string;
+    name: string;
+    avatar_url: string | null;
+    comments_count: number;
+  }>;
 }
 
 export interface PostStats {
@@ -171,7 +176,9 @@ export const adminUsersQuerySchema = z.object({
   search: z.string().optional(),
   sort_by: z.enum(['created_at', 'last_login_at', 'name', 'email']).default('created_at'),
   sort_order: z.enum(['asc', 'desc']).default('desc'),
-  ban_status: z.enum(['all', 'banned', 'not_banned', 'comment_banned', 'full_banned']).default('all'),
+  ban_status: z
+    .enum(['all', 'banned', 'not_banned', 'comment_banned', 'full_banned'])
+    .default('all'),
 });
 
 export const adminPostsQuerySchema = z.object({

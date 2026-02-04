@@ -11,7 +11,8 @@ jest.unstable_mockModule('../../db/index.js', () => ({
 }));
 
 // Import auth after mocking
-const { generateToken, verifyToken, requireAuth, optionalAuth } = await import('../../middleware/auth.js');
+const { generateToken, verifyToken, requireAuth, optionalAuth } =
+  await import('../../middleware/auth.js');
 import type { JwtPayload } from '../../middleware/auth.js';
 
 describe('Auth Middleware', () => {

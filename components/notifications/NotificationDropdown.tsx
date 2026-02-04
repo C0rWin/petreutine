@@ -60,10 +60,8 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     // Mark as read
     if (!notification.is_read) {
       await api.markNotificationRead(notification.id);
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notification.id ? { ...n, is_read: true } : n
-        )
+      setNotifications(prev =>
+        prev.map(n => (n.id === notification.id ? { ...n, is_read: true } : n))
       );
     }
 
@@ -74,15 +72,13 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const handleMarkAllRead = async () => {
     const result = await api.markAllNotificationsRead();
     if (!result.error) {
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, is_read: true }))
-      );
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
     }
   };
 
   if (!isOpen) return null;
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div
@@ -152,7 +148,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
-            {notifications.map((notification) => (
+            {notifications.map(notification => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}

@@ -75,7 +75,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       <div className="relative">
         <textarea
           value={content}
-          onChange={(e) => {
+          onChange={e => {
             setContent(e.target.value);
             setError(null);
           }}
@@ -86,14 +86,10 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           } ${isReply ? 'min-h-[80px]' : 'min-h-[100px]'}`}
           rows={isReply ? 2 : 3}
         />
-        <div className="absolute bottom-2 right-2 text-xs text-gray-400">
-          {content.length}/2000
-        </div>
+        <div className="absolute bottom-2 right-2 text-xs text-gray-400">{content.length}/2000</div>
       </div>
 
-      {error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
-      )}
+      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
 
       <div className="mt-2 flex items-center justify-end gap-2">
         {onCancel && (

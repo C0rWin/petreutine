@@ -35,7 +35,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onClick }) => {
     >
       {/* Thumbnail */}
       <div className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-        {(match.imageUrl || match.image_url) ? (
+        {match.imageUrl || match.image_url ? (
           <img
             src={match.imageUrl || match.image_url}
             alt={match.title}
@@ -44,7 +44,12 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onClick }) => {
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
           </div>
         )}
@@ -53,21 +58,37 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onClick }) => {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1.5">
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase text-white ${match.type === PostType.LOST ? 'bg-coral-500' : 'bg-teal-500'}`}>
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase text-white ${match.type === PostType.LOST ? 'bg-coral-500' : 'bg-teal-500'}`}
+          >
             {match.type === PostType.LOST ? 'Пропал' : 'Найден'}
           </span>
-          <h4 className="font-semibold text-sm text-gray-900 truncate group-hover:text-coral-600 transition-colors">{match.title}</h4>
+          <h4 className="font-semibold text-sm text-gray-900 truncate group-hover:text-coral-600 transition-colors">
+            {match.title}
+          </h4>
         </div>
 
         <p className="text-xs text-gray-500 truncate mb-2 flex items-center gap-1">
-          <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <svg
+            className="w-3 h-3 flex-shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
           </svg>
           {match.location}
         </p>
 
         {/* Confidence & Reason */}
-        <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${getConfidenceBgColor()}`}>
+        <div
+          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${getConfidenceBgColor()}`}
+        >
           <div className="flex items-center gap-1.5">
             <div className={`w-2.5 h-2.5 rounded-full ${getConfidenceColor()}`} />
             <span className={`text-xs font-bold ${getConfidenceTextColor()}`}>
