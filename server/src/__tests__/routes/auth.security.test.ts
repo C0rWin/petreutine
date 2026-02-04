@@ -376,6 +376,163 @@ describe('OAuth State Security', () => {
   });
 });
 
+describe('OAuth state 5-minute expiry (time-based)', () => {
+  let mockReq: ReturnType<typeof createMockRequest>;
+  let mockRes: ReturnType<typeof createMockResponse>;
+  let mockNext: ReturnType<typeof createMockNext>;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-02-04T12:00:00Z'));
+    mockReq = createMockRequest();
+    mockRes = createMockResponse();
+    mockNext = createMockNext();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('should accept state at exactly 4 minutes 59 seconds', async () => {
+    const validState = crypto.randomBytes(32).toString('hex');
+
+    // Mock OAuth state validation - state is still valid (not expired)
+    mockQueryFn.mockImplementation(async (sql) => {
+      if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+        // State is valid - not expired yet (4:59 < 5:00)
+        return { rows: [{ redirect_to: null }], rowCount: 1 };
+      }
+      if (sql.includes('SELECT * FROM users WHERE yandex_id')) {
+        return { rows: [mockUser], rowCount: 1 };
+      }
+      if (sql.includes('UPDATE users')) {
+        return { rows: [mockUser], rowCount: 1 };
+      }
+      if (sql.includes('cleanup_expired_oauth_states')) {
+        return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    });
+
+    // Mock successful OAuth token and user info
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'access-token' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'yandex-123',
+          login: 'testuser',
+          default_email: 'test@yandex.ru',
+          real_name: 'Test User',
+          is_avatar_empty: true,
+        }),
+      });
+
+    // Advance time by 4 minutes 59 seconds (299 seconds = 299000ms)
+    jest.advanceTimersByTime(299000);
+
+    mockReq.query = { code: 'valid-code', state: validState };
+    await executeHandler('get', '/yandex/callback', mockReq as any, mockRes, mockNext);
+
+    // Should succeed - state is still valid
+    const redirectCall = (mockRes.redirect as jest.Mock).mock.calls[0][0] as string;
+    expect(redirectCall).toContain('token=');
+    expect(redirectCall).not.toContain('error=invalid_state');
+  });
+
+  it('should reject state at exactly 5 minutes 1 second', async () => {
+    const expiredState = crypto.randomBytes(32).toString('hex');
+
+    // Mock OAuth state validation - state is expired
+    mockQueryFn.mockImplementation(async (sql) => {
+      if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+        // State is expired - query returns empty due to expires_at > CURRENT_TIMESTAMP condition
+        return { rows: [], rowCount: 0 };
+      }
+      if (sql.includes('cleanup_expired_oauth_states')) {
+        return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    });
+
+    // Advance time by 5 minutes 1 second (301 seconds = 301000ms)
+    jest.advanceTimersByTime(301000);
+
+    mockReq.query = { code: 'valid-code', state: expiredState };
+    await executeHandler('get', '/yandex/callback', mockReq as any, mockRes, mockNext);
+
+    // Should fail - state is expired
+    expect(mockRes.redirect).toHaveBeenCalledWith('http://localhost:3000?error=invalid_state');
+  });
+
+  it('should reject replayed state even within expiry window', async () => {
+    const validState = crypto.randomBytes(32).toString('hex');
+    let useCount = 0;
+
+    // Mock OAuth state validation - first use succeeds, second fails
+    mockQueryFn.mockImplementation(async (sql, params) => {
+      if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+        useCount++;
+        if (useCount === 1 && params?.[0] === validState) {
+          // First use - state is valid and consumed
+          return { rows: [{ redirect_to: null }], rowCount: 1 };
+        }
+        // Second use - state already consumed by DELETE, returns empty
+        return { rows: [], rowCount: 0 };
+      }
+      if (sql.includes('SELECT * FROM users WHERE yandex_id')) {
+        return { rows: [mockUser], rowCount: 1 };
+      }
+      if (sql.includes('UPDATE users')) {
+        return { rows: [mockUser], rowCount: 1 };
+      }
+      if (sql.includes('cleanup_expired_oauth_states')) {
+        return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    });
+
+    // Mock successful OAuth for first request
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'access-token' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'yandex-123',
+          login: 'testuser',
+          default_email: 'test@yandex.ru',
+          real_name: 'Test User',
+          is_avatar_empty: true,
+        }),
+      });
+
+    // First callback - should succeed
+    mockReq.query = { code: 'valid-code', state: validState };
+    await executeHandler('get', '/yandex/callback', mockReq as any, mockRes, mockNext);
+
+    const firstRedirect = (mockRes.redirect as jest.Mock).mock.calls[0][0] as string;
+    expect(firstRedirect).toContain('token=');
+    expect(firstRedirect).not.toContain('error=');
+
+    // Second callback with same state - should fail (replay attack)
+    const mockRes2 = createMockResponse();
+    const mockReq2 = createMockRequest({ query: { code: 'valid-code', state: validState } });
+
+    // No time has passed - still within expiry window, but state was consumed
+    await executeHandler('get', '/yandex/callback', mockReq2 as any, mockRes2, createMockNext());
+
+    // Second use should be rejected - state was atomically consumed by DELETE
+    expect(mockRes2.redirect).toHaveBeenCalledWith('http://localhost:3000?error=invalid_state');
+    expect(useCount).toBe(2); // Proves both attempts hit the DB
+  });
+});
+
 describe('SSL Certificate Configuration', () => {
   it('should have proper SSL config that requires CA cert in production', () => {
     // This test verifies the implementation exists
