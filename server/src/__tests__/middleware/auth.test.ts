@@ -142,7 +142,10 @@ describe('Auth Middleware', () => {
     it('should attach user and call next on success', async () => {
       const token = generateToken({ userId: mockUser.id, email: mockUser.email });
       mockReq.headers = { authorization: `Bearer ${token}` };
+      // First query: get user with ban info
       mockQueryFn.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 });
+      // Second query: fire-and-forget update last_login_at
+      mockQueryFn.mockResolvedValueOnce({ rows: [], rowCount: 1 });
 
       await requireAuth(mockReq as any, mockRes, mockNext);
 

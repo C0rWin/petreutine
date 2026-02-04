@@ -257,19 +257,20 @@ describe('Security Middleware', () => {
     let mockRes: ReturnType<typeof createMockResponse>;
     let mockNext: ReturnType<typeof createMockNext>;
     let originalEnv: string | undefined;
-    let consoleSpy: jest.SpiedFunction<typeof console.log>;
+    let stdoutSpy: jest.SpiedFunction<typeof process.stdout.write>;
 
     beforeEach(() => {
       mockReq = createMockRequest();
       mockRes = createMockResponse();
       mockNext = createMockNext();
       originalEnv = process.env.NODE_ENV;
-      consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      // requestLogger uses process.stdout.write for structured logging
+      stdoutSpy = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
     });
 
     afterEach(() => {
       process.env.NODE_ENV = originalEnv;
-      consoleSpy.mockRestore();
+      stdoutSpy.mockRestore();
     });
 
     it('should log request in production mode', () => {
@@ -281,8 +282,8 @@ describe('Security Middleware', () => {
 
       requestLogger(mockReq as any, mockRes, mockNext);
 
-      expect(consoleSpy).toHaveBeenCalled();
-      const loggedData = JSON.parse(consoleSpy.mock.calls[0][0] as string);
+      expect(stdoutSpy).toHaveBeenCalled();
+      const loggedData = JSON.parse((stdoutSpy.mock.calls[0][0] as string).trim());
       expect(loggedData.method).toBe('GET');
       expect(loggedData.path).toBe('/api/posts');
       expect(loggedData.ip).toBe('192.168.1.1');
@@ -297,7 +298,7 @@ describe('Security Middleware', () => {
 
       requestLogger(mockReq as any, mockRes, mockNext);
 
-      expect(consoleSpy).not.toHaveBeenCalled();
+      expect(stdoutSpy).not.toHaveBeenCalled();
     });
 
     it('should use x-forwarded-for header if ip not available', () => {
@@ -309,7 +310,7 @@ describe('Security Middleware', () => {
 
       requestLogger(mockReq as any, mockRes, mockNext);
 
-      const loggedData = JSON.parse(consoleSpy.mock.calls[0][0] as string);
+      const loggedData = JSON.parse((stdoutSpy.mock.calls[0][0] as string).trim());
       expect(loggedData.ip).toBe('10.0.0.1');
     });
 
@@ -322,7 +323,7 @@ describe('Security Middleware', () => {
 
       requestLogger(mockReq as any, mockRes, mockNext);
 
-      const loggedData = JSON.parse(consoleSpy.mock.calls[0][0] as string);
+      const loggedData = JSON.parse((stdoutSpy.mock.calls[0][0] as string).trim());
       expect(loggedData.ip).toBe('unknown');
     });
 
