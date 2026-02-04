@@ -96,16 +96,23 @@ export const MatchItemSchema = z
   .strict();
 
 /**
+ * Match item schema - post with confidence and reason
+ * Note: Uses passthrough() because match_score from DB is included in spread
+ */
+const MatchPostSchema = PostSchema.omit({})
+  .extend({
+    confidence: z.number().min(0).max(1),
+    reason: z.string(),
+    match_score: z.number().optional(), // Included from DB query spread
+  })
+  .passthrough();
+
+/**
  * GET /api/search/matches/:postId response schema
  */
 export const MatchResultSchema = z
   .object({
-    matches: z.array(
-      PostSchema.extend({
-        confidence: z.number().min(0).max(1),
-        reason: z.string(),
-      })
-    ),
+    matches: z.array(MatchPostSchema),
   })
   .strict();
 
