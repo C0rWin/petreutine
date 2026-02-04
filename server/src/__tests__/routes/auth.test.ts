@@ -37,6 +37,15 @@ beforeEach(() => {
     FRONTEND_URL: 'http://localhost:3000',
     NODE_ENV: 'development',
   };
+  jest.clearAllMocks();
+
+  // Default mock implementation for OAuth state validation and cleanup
+  mockQueryFn.mockImplementation(async (sql) => {
+    if (sql.includes('cleanup_expired_oauth_states')) {
+      return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+    }
+    return { rows: [], rowCount: 0 };
+  });
 });
 
 afterEach(() => {
@@ -129,7 +138,19 @@ describe('Auth Routes', () => {
     });
 
     it('should handle token exchange error', async () => {
-      mockReq.query = { code: 'auth-code' };
+      mockReq.query = { code: 'auth-code', state: 'valid-state-token' };
+
+      // Mock OAuth state validation to succeed
+      mockQueryFn.mockImplementation(async (sql) => {
+        if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+          return { rows: [{ redirect_to: null }], rowCount: 1 };
+        }
+        if (sql.includes('cleanup_expired_oauth_states')) {
+          return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
+
       mockFetch.mockResolvedValueOnce({
         ok: false,
         text: async () => 'Token error',
@@ -141,7 +162,19 @@ describe('Auth Routes', () => {
     });
 
     it('should handle user info error', async () => {
-      mockReq.query = { code: 'auth-code' };
+      mockReq.query = { code: 'auth-code', state: 'valid-state-token' };
+
+      // Mock OAuth state validation to succeed
+      mockQueryFn.mockImplementation(async (sql) => {
+        if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+          return { rows: [{ redirect_to: null }], rowCount: 1 };
+        }
+        if (sql.includes('cleanup_expired_oauth_states')) {
+          return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
+
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
@@ -158,7 +191,7 @@ describe('Auth Routes', () => {
     });
 
     it('should create new user on first login', async () => {
-      mockReq.query = { code: 'auth-code' };
+      mockReq.query = { code: 'auth-code', state: 'valid-state-token' };
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
@@ -169,12 +202,25 @@ describe('Auth Routes', () => {
           json: async () => yandexUser,
         });
 
-      // User doesn't exist
-      mockQueryFn.mockResolvedValueOnce({ rows: [], rowCount: 0 });
-      // Insert new user
-      mockQueryFn.mockResolvedValueOnce({
-        rows: [{ ...mockUser, yandex_id: yandexUser.id }],
-        rowCount: 1,
+      // Mock OAuth state validation and subsequent queries
+      mockQueryFn.mockImplementation(async (sql) => {
+        if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+          return { rows: [{ redirect_to: null }], rowCount: 1 };
+        }
+        if (sql.includes('cleanup_expired_oauth_states')) {
+          return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+        }
+        if (sql.includes('SELECT * FROM users WHERE yandex_id')) {
+          // User doesn't exist
+          return { rows: [], rowCount: 0 };
+        }
+        if (sql.includes('SELECT COUNT(*) as count FROM users')) {
+          return { rows: [{ count: '0' }], rowCount: 1 };
+        }
+        if (sql.includes('INSERT INTO users')) {
+          return { rows: [{ ...mockUser, yandex_id: yandexUser.id }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
       });
 
       await executeHandler('get', '/yandex/callback', mockReq as any, mockRes, mockNext);
@@ -185,12 +231,12 @@ describe('Auth Routes', () => {
       );
       expect(mockGenerateToken).toHaveBeenCalled();
       expect(mockRes.redirect).toHaveBeenCalledWith(
-        expect.stringContaining('http://localhost:3000/?token=')
+        expect.stringContaining('http://localhost:3000?token=')
       );
     });
 
     it('should update existing user on login', async () => {
-      mockReq.query = { code: 'auth-code' };
+      mockReq.query = { code: 'auth-code', state: 'valid-state-token' };
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
@@ -201,10 +247,23 @@ describe('Auth Routes', () => {
           json: async () => yandexUser,
         });
 
-      // User exists
-      mockQueryFn.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 });
-      // Update user
-      mockQueryFn.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 });
+      // Mock OAuth state validation and subsequent queries
+      mockQueryFn.mockImplementation(async (sql) => {
+        if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+          return { rows: [{ redirect_to: null }], rowCount: 1 };
+        }
+        if (sql.includes('cleanup_expired_oauth_states')) {
+          return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+        }
+        if (sql.includes('SELECT * FROM users WHERE yandex_id')) {
+          // User exists
+          return { rows: [mockUser], rowCount: 1 };
+        }
+        if (sql.includes('UPDATE users')) {
+          return { rows: [mockUser], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
 
       await executeHandler('get', '/yandex/callback', mockReq as any, mockRes, mockNext);
 
@@ -216,7 +275,7 @@ describe('Auth Routes', () => {
 
     it('should use display_name if real_name not available', async () => {
       const userWithoutRealName = { ...yandexUser, real_name: undefined, display_name: 'Display Name' };
-      mockReq.query = { code: 'auth-code' };
+      mockReq.query = { code: 'auth-code', state: 'valid-state-token' };
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
@@ -227,8 +286,25 @@ describe('Auth Routes', () => {
           json: async () => userWithoutRealName,
         });
 
-      mockQueryFn.mockResolvedValueOnce({ rows: [], rowCount: 0 });
-      mockQueryFn.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 });
+      // Mock OAuth state validation and subsequent queries
+      mockQueryFn.mockImplementation(async (sql) => {
+        if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+          return { rows: [{ redirect_to: null }], rowCount: 1 };
+        }
+        if (sql.includes('cleanup_expired_oauth_states')) {
+          return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+        }
+        if (sql.includes('SELECT * FROM users WHERE yandex_id')) {
+          return { rows: [], rowCount: 0 };
+        }
+        if (sql.includes('SELECT COUNT(*) as count FROM users')) {
+          return { rows: [{ count: '0' }], rowCount: 1 };
+        }
+        if (sql.includes('INSERT INTO users')) {
+          return { rows: [mockUser], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
 
       await executeHandler('get', '/yandex/callback', mockReq as any, mockRes, mockNext);
 
@@ -240,7 +316,7 @@ describe('Auth Routes', () => {
 
     it('should handle empty avatar', async () => {
       const userWithEmptyAvatar = { ...yandexUser, is_avatar_empty: true };
-      mockReq.query = { code: 'auth-code' };
+      mockReq.query = { code: 'auth-code', state: 'valid-state-token' };
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
@@ -251,8 +327,25 @@ describe('Auth Routes', () => {
           json: async () => userWithEmptyAvatar,
         });
 
-      mockQueryFn.mockResolvedValueOnce({ rows: [], rowCount: 0 });
-      mockQueryFn.mockResolvedValueOnce({ rows: [mockUser], rowCount: 1 });
+      // Mock OAuth state validation and subsequent queries
+      mockQueryFn.mockImplementation(async (sql) => {
+        if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+          return { rows: [{ redirect_to: null }], rowCount: 1 };
+        }
+        if (sql.includes('cleanup_expired_oauth_states')) {
+          return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+        }
+        if (sql.includes('SELECT * FROM users WHERE yandex_id')) {
+          return { rows: [], rowCount: 0 };
+        }
+        if (sql.includes('SELECT COUNT(*) as count FROM users')) {
+          return { rows: [{ count: '0' }], rowCount: 1 };
+        }
+        if (sql.includes('INSERT INTO users')) {
+          return { rows: [mockUser], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
 
       await executeHandler('get', '/yandex/callback', mockReq as any, mockRes, mockNext);
 
@@ -261,6 +354,41 @@ describe('Auth Routes', () => {
         expect.stringContaining('INSERT INTO users'),
         expect.arrayContaining([null])
       );
+    });
+  });
+
+  describe('OAuth state validation', () => {
+    it('should reject callback with missing state parameter', async () => {
+      // No state parameter provided, only code
+      mockReq.query = { code: 'auth-code' };
+
+      await executeHandler('get', '/yandex/callback', mockReq as any, mockRes, mockNext);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith('http://localhost:3000?error=invalid_state');
+      // State validation query should NOT be called since state is missing
+      expect(mockQueryFn).not.toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM oauth_states'),
+        expect.anything()
+      );
+    });
+
+    it('should reject callback with invalid state (not found in DB)', async () => {
+      mockReq.query = { code: 'auth-code', state: 'unknown-state-token' };
+
+      // Mock DELETE query to return empty result (state not found)
+      mockQueryFn.mockImplementation(async (sql) => {
+        if (sql.includes('DELETE FROM oauth_states') && sql.includes('RETURNING')) {
+          return { rows: [], rowCount: 0 };
+        }
+        if (sql.includes('cleanup_expired_oauth_states')) {
+          return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
+
+      await executeHandler('get', '/yandex/callback', mockReq as any, mockRes, mockNext);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith('http://localhost:3000?error=invalid_state');
     });
   });
 
@@ -275,9 +403,18 @@ describe('Auth Routes', () => {
 
   describe('POST /dev/create-user - Dev user creation', () => {
     it('should create a dev user in development mode', async () => {
-      mockQueryFn.mockResolvedValueOnce({
-        rows: [{ ...mockUser, yandex_id: 'dev_123' }],
-        rowCount: 1,
+      // Mock the SELECT COUNT and INSERT queries
+      mockQueryFn.mockImplementation(async (sql) => {
+        if (sql.includes('SELECT COUNT(*) as count FROM users')) {
+          return { rows: [{ count: '0' }], rowCount: 1 };
+        }
+        if (sql.includes('INSERT INTO users')) {
+          return { rows: [{ ...mockUser, yandex_id: 'dev_123' }], rowCount: 1 };
+        }
+        if (sql.includes('cleanup_expired_oauth_states')) {
+          return { rows: [{ cleanup_expired_oauth_states: 0 }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
       });
 
       mockReq.body = { name: 'Dev User', email: 'dev@example.com' };
