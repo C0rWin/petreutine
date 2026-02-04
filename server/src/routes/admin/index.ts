@@ -1,6 +1,8 @@
-import { Router } from 'express';
-import { requireAuth } from '../../middleware/auth.js';
+import { Router, Response } from 'express';
+import { requireAuth, AuthenticatedRequest } from '../../middleware/auth.js';
 import { requireAdmin } from '../../middleware/roles.js';
+import { asyncHandler } from '../../middleware/errorHandler.js';
+import { adminStatsCache } from '../../services/cache.js';
 import usersRouter from './users.js';
 import postsRouter from './posts.js';
 import statsRouter from './stats.js';
@@ -17,5 +19,33 @@ router.use('/users', usersRouter);
 router.use('/posts', postsRouter);
 router.use('/stats', statsRouter);
 router.use('/audit-log', auditRouter);
+
+// Cache refresh endpoint
+router.post(
+  '/cache/refresh',
+  asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
+    adminStatsCache.invalidate();
+
+    res.json({
+      success: true,
+      message: 'Admin stats cache cleared',
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
+
+// Cache stats endpoint
+router.get(
+  '/cache/stats',
+  asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
+    const stats = adminStatsCache.getStats();
+
+    res.json({
+      ...stats,
+      ttl_seconds: 60,
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
 
 export default router;
