@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import pool, { initializeDatabase } from './db/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { largeBodyParser, payloadTooLargeHandler } from './middleware/bodyParser.js';
 import {
   apiLimiter,
   authLimiter,
@@ -63,9 +64,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Body parsing with size limits
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Large body parser for upload routes (must be before global parser)
+app.use('/api/upload', largeBodyParser);
+app.use('/upload', largeBodyParser);
+
+// Body parsing with size limits (1MB default, use largeBodyParser for upload routes)
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Input sanitization
 app.use(sanitizeInput);
@@ -202,6 +207,7 @@ app.use('/admin', adminRouter);
 
 // Error handling
 app.use(notFoundHandler);
+app.use(payloadTooLargeHandler);  // Handle 413 with helpful message
 app.use(errorHandler);
 
 // Start server
