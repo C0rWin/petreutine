@@ -40,7 +40,14 @@ jobs:
         run: npm run build
 
       - name: Run tests with coverage
+        # Test failures will fail this job, blocking quality-gates and deployment
         run: npm test -- --coverage --coverageReporters=text --coverageReporters=lcov
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-jwt-secret-key-for-testing
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          CORS_ORIGIN: http://localhost:3000
+          FRONTEND_URL: http://localhost:3000
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
