@@ -1,12 +1,12 @@
 import {
-  PetPost,
-  User,
-  PostType,
   AnimalType,
   Comment,
   Notification,
-  VoteType,
+  PetPost,
+  PostType,
   ReportReason,
+  User,
+  VoteType,
 } from '../types';
 
 // In development, Vite proxies /api to the backend
@@ -28,13 +28,6 @@ interface SearchResponse {
   total: number;
   limit: number;
   offset: number;
-}
-
-interface MatchResult {
-  id: string;
-  confidence: number;
-  reason: string;
-  post: PetPost;
 }
 
 interface MatchesResponse {
@@ -99,7 +92,7 @@ class ApiService {
       const data = await response.json();
       return { data };
     } catch (error) {
-      console.error('API request failed:', error);
+      // API request failed - error returned to caller
       return { error: error instanceof Error ? error.message : 'Network error' };
     }
   }
@@ -265,7 +258,7 @@ class ApiService {
       const data = await response.json();
       return { data };
     } catch (error) {
-      console.error('Upload failed:', error);
+      // Upload failed - error returned to caller
       return { error: error instanceof Error ? error.message : 'Ошибка сети' };
     }
   }

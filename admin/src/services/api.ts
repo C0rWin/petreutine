@@ -1,16 +1,16 @@
 import {
-  ApiResponse,
-  PaginatedResponse,
-  AdminUserWithStats,
-  AdminPostWithStats,
   AdminComment,
-  BanHistoryEntry,
+  AdminPostWithStats,
+  AdminUserWithStats,
+  ApiResponse,
   AuditLogEntry,
-  OverviewStats,
-  UserStats,
-  PostStats,
-  CommentStats,
+  BanHistoryEntry,
   BanType,
+  CommentStats,
+  OverviewStats,
+  PaginatedResponse,
+  PostStats,
+  UserStats,
 } from '../types';
 
 const API_BASE = '/api/admin';
@@ -191,15 +191,15 @@ class AdminApi {
     return this.request('/stats/overview');
   }
 
-  async getUserStats(days: number = 30): Promise<ApiResponse<UserStats>> {
+  async getUserStats(days = 30): Promise<ApiResponse<UserStats>> {
     return this.request(`/stats/users?days=${days}`);
   }
 
-  async getPostStats(days: number = 30): Promise<ApiResponse<PostStats>> {
+  async getPostStats(days = 30): Promise<ApiResponse<PostStats>> {
     return this.request(`/stats/posts?days=${days}`);
   }
 
-  async getCommentStats(days: number = 30): Promise<ApiResponse<CommentStats>> {
+  async getCommentStats(days = 30): Promise<ApiResponse<CommentStats>> {
     return this.request(`/stats/comments?days=${days}`);
   }
 

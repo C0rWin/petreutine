@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { AnimalType, PostType } from '../../types';
 import { api } from '../api';
-import { PostType, AnimalType } from '../../types';
 
 describe('ApiService', () => {
   const mockFetch = vi.fn();

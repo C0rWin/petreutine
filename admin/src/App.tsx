@@ -1,13 +1,14 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+
 import { AdminLayout } from './components/layout/AdminLayout';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Dashboard } from './pages/Dashboard';
-import { UsersPage } from './pages/UsersPage';
-import { UserDetailPage } from './pages/UserDetailPage';
-import { PostsPage } from './pages/PostsPage';
-import { PostDetailPage } from './pages/PostDetailPage';
 import { LoginPage } from './pages/LoginPage';
+import { PostDetailPage } from './pages/PostDetailPage';
+import { PostsPage } from './pages/PostsPage';
+import { UserDetailPage } from './pages/UserDetailPage';
+import { UsersPage } from './pages/UsersPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, isLoading } = useAuth();

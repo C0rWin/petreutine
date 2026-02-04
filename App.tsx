@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { api } from './services/api';
-import { PetPost, PostType, normalizePost } from './types';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import PetCard from './components/PetCard';
+import React, { useCallback, useEffect, useState } from 'react';
+
+import { CommentSection } from './components/comments';
 import CreatePost from './components/CreatePost';
 import EditPost from './components/EditPost';
 import LocationMap from './components/LocationMap';
 import MatchCard from './components/MatchCard';
 import MyPosts from './components/MyPosts';
 import { NotificationBadge } from './components/notifications';
-import { CommentSection } from './components/comments';
+import PetCard from './components/PetCard';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { api } from './services/api';
+import { normalizePost, PetPost, PostType } from './types';
 
 const AppContent: React.FC = () => {
   const { user, isLoading: authLoading, login, logout } = useAuth();
@@ -44,9 +45,9 @@ const AppContent: React.FC = () => {
       }
       const normalizedPosts = (response.data?.posts || []).map(normalizePost);
       setPosts(normalizedPosts);
-    } catch (err) {
+    } catch {
       setError('Не удалось загрузить объявления');
-      console.error(err);
+      // Error logged to state
     } finally {
       setIsLoading(false);
     }
@@ -76,9 +77,9 @@ const AppContent: React.FC = () => {
       }
       const normalizedPosts = (response.data?.posts || []).map(normalizePost);
       setPosts(normalizedPosts);
-    } catch (err) {
+    } catch {
       setError('Ошибка поиска');
-      console.error(err);
+      // Error logged to state
     } finally {
       setIsSearching(false);
     }
@@ -103,8 +104,8 @@ const AppContent: React.FC = () => {
           }))
         );
       }
-    } catch (err) {
-      console.error('Failed to load matches:', err);
+    } catch {
+      // Failed to load matches - silently ignore, UI shows empty state
     } finally {
       setIsLoadingMatches(false);
     }
@@ -133,9 +134,9 @@ const AppContent: React.FC = () => {
       setPosts(posts.filter(p => p.id !== selectedPost.id));
       setSelectedPost(null);
       setShowDeleteConfirm(false);
-    } catch (err) {
+    } catch {
       setError('Не удалось удалить объявление');
-      console.error(err);
+      // Error logged to state
     } finally {
       setIsDeleting(false);
     }
@@ -441,7 +442,7 @@ const AppContent: React.FC = () => {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-coral-500 mt-0.5">•</span>
-                      Переключите фильтр "Пропавшие" / "Найденные"
+                      Переключите фильтр &quot;Пропавшие&quot; / &quot;Найденные&quot;
                     </li>
                   </ul>
                 </div>

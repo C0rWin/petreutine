@@ -1,5 +1,5 @@
 import { query } from '../db/index.js';
-import { NotificationType, CommentWithUser } from '../types/comments.js';
+import { CommentWithUser, NotificationType } from '../types/comments.js';
 
 /**
  * Creates notifications when a new comment is posted

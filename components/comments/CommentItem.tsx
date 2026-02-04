@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Comment, VoteType, ReportReason } from '../../types';
-import { VoteButtons } from './VoteButtons';
+
+import { Comment, ReportReason, VoteType } from '../../types';
 import { CommentForm } from './CommentForm';
 import { ReportModal } from './ReportModal';
+import { VoteButtons } from './VoteButtons';
 
 interface CommentItemProps {
   comment: Comment;

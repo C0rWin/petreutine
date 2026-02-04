@@ -1,9 +1,9 @@
 import { eventBus, safeHandler } from '../events.js';
 import {
   createCommentNotification,
-  createUpvoteNotification,
   createModerationApprovedNotification,
   createModerationRejectedNotification,
+  createUpvoteNotification,
 } from '../notifications.js';
 
 // Comment created -> notify post owner and parent comment author
@@ -40,4 +40,4 @@ eventBus.on(
   })
 );
 
-console.log('[Handler] notificationHandler registered');
+// Handler registered silently

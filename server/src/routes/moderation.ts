@@ -1,20 +1,21 @@
-import { Router, Response, NextFunction } from 'express';
+import { NextFunction, Response, Router } from 'express';
+
 import { query } from '../db/index.js';
-import {
-  CommentWithUser,
-  CommentReportWithDetails,
-  CommentStatus,
-  ReportStatus,
-  moderateCommentSchema,
-  resolveReportSchema,
-} from '../types/comments.js';
+import { AuthenticatedRequest, requireAuth } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
-import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { requireModerator } from '../middleware/roles.js';
 import {
   createModerationApprovedNotification,
   createModerationRejectedNotification,
 } from '../services/notifications.js';
+import {
+  CommentReportWithDetails,
+  CommentStatus,
+  CommentWithUser,
+  moderateCommentSchema,
+  ReportStatus,
+  resolveReportSchema,
+} from '../types/comments.js';
 
 const router = Router();
 

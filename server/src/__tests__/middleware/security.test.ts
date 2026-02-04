@@ -1,11 +1,12 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+
 import {
   httpsRedirect,
+  requestLogger,
   sanitizeInput,
   securityHeaders,
-  requestLogger,
 } from '../../middleware/security.js';
-import { createMockRequest, createMockResponse, createMockNext } from '../setup.js';
+import { createMockNext, createMockRequest, createMockResponse } from '../setup.js';
 
 describe('Security Middleware', () => {
   describe('httpsRedirect', () => {

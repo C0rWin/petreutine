@@ -1,25 +1,26 @@
-import { Router, Response } from 'express';
+import { Response, Router } from 'express';
+
 import { query } from '../../db/index.js';
-import { AppError, asyncHandler } from '../../middleware/errorHandler.js';
 import { AuthenticatedRequest } from '../../middleware/auth.js';
-import { logAdminAction } from './utils.js';
+import { AppError, asyncHandler } from '../../middleware/errorHandler.js';
 import {
-  adminUsersQuerySchema,
-  adminPostsQuerySchema,
   adminCommentsQuerySchema,
-  banHistoryQuerySchema,
-  banUserSchema,
-  unbanUserSchema,
-  toggleAdminSchema,
-  AdminUserWithStats,
+  adminPostsQuerySchema,
   AdminPostWithStats,
-  BanHistoryEntry,
-  PaginatedResponse,
-  BanType,
-  BanAction,
   AdminTargetType,
+  adminUsersQuerySchema,
+  AdminUserWithStats,
+  BanAction,
+  BanHistoryEntry,
+  banHistoryQuerySchema,
+  BanType,
+  banUserSchema,
+  PaginatedResponse,
+  toggleAdminSchema,
+  unbanUserSchema,
 } from '../../types/admin.js';
 import { CommentWithUser } from '../../types/comments.js';
+import { logAdminAction } from './utils.js';
 
 const router = Router();
 

@@ -1,16 +1,17 @@
-import { Router, Response } from 'express';
+import { Response, Router } from 'express';
+
 import { query } from '../../db/index.js';
-import { AppError, asyncHandler } from '../../middleware/errorHandler.js';
 import { AuthenticatedRequest } from '../../middleware/auth.js';
-import { logAdminAction } from './utils.js';
+import { AppError, asyncHandler } from '../../middleware/errorHandler.js';
 import {
   adminPostsQuerySchema,
-  toggleCommentsSchema,
-  deletePostSchema,
   AdminPostWithStats,
-  PaginatedResponse,
   AdminTargetType,
+  deletePostSchema,
+  PaginatedResponse,
+  toggleCommentsSchema,
 } from '../../types/admin.js';
+import { logAdminAction } from './utils.js';
 
 const router = Router();
 

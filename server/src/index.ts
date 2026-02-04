@@ -1,27 +1,28 @@
 import 'dotenv/config';
-import express from 'express';
+
 import cors from 'cors';
+import express from 'express';
 import helmet from 'helmet';
+
 import pool, { initializeDatabase } from './db/index.js';
-import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { largeBodyParser, payloadTooLargeHandler } from './middleware/bodyParser.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import {
   apiLimiter,
   authLimiter,
-  createPostLimiter,
   httpsRedirect,
+  requestLogger,
   sanitizeInput,
   securityHeaders,
-  requestLogger,
 } from './middleware/security.js';
+import adminRouter from './routes/admin/index.js';
+import authRouter from './routes/auth.js';
+import commentsRouter from './routes/comments.js';
+import moderationRouter from './routes/moderation.js';
+import notificationsRouter from './routes/notifications.js';
 import postsRouter from './routes/posts.js';
 import searchRouter from './routes/search.js';
-import authRouter from './routes/auth.js';
 import uploadRouter from './routes/upload.js';
-import commentsRouter from './routes/comments.js';
-import notificationsRouter from './routes/notifications.js';
-import moderationRouter from './routes/moderation.js';
-import adminRouter from './routes/admin/index.js';
 import { registerEventHandlers } from './services/events.js';
 
 const app = express();
@@ -115,7 +116,7 @@ app.get('/internal/db-url', async (req, res) => {
       latency_ms: latencyMs,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
+  } catch {
     res.status(503).json({
       status: 'disconnected',
       error: 'Database connection failed',
@@ -218,7 +219,7 @@ app.use(payloadTooLargeHandler); // Handle 413 with helpful message
 app.use(errorHandler);
 
 // Start server
-async function start() {
+async function start(): Promise<void> {
   try {
     // Initialize database schema
     if (process.env.AUTO_MIGRATE === 'true') {
@@ -229,8 +230,7 @@ async function start() {
     await registerEventHandlers();
 
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      // Server started successfully
     });
   } catch (error) {
     console.error('Failed to start server:', error);

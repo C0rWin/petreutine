@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import { Badge, getPostStatusBadge, getPostTypeBadge } from '../components/common/Badge';
 import { adminApi } from '../services/api';
 import { AdminPostWithStats } from '../types';
-import { getPostTypeBadge, getPostStatusBadge, Badge } from '../components/common/Badge';
-import { ConfirmModal } from '../components/common/ConfirmModal';
 
 export function PostDetailPage() {
   const { id } = useParams<{ id: string }>();

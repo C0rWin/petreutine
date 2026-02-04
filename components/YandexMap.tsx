@@ -108,14 +108,14 @@ const YandexMap: React.FC<YandexMapProps> = ({
           setMap(newMap);
           setPlacemark(newPlacemark);
           setIsLoading(false);
-        } catch (err) {
-          console.error('Error initializing map:', err);
+        } catch {
+          // Error initializing map
           setError('Ошибка инициализации карты');
           setIsLoading(false);
         }
       })
-      .catch(err => {
-        console.error('Failed to load Yandex Maps:', err);
+      .catch((err: Error) => {
+        // Failed to load Yandex Maps
         setError(err.message || 'Не удалось загрузить карту');
         setIsLoading(false);
       });
@@ -139,8 +139,8 @@ const YandexMap: React.FC<YandexMapProps> = ({
           placemark.properties?.set('balloonContent', address);
         }
       }
-    } catch (err) {
-      console.error('Geocoding error:', err);
+    } catch {
+      // Geocoding error - silently ignore
     }
   };
 
@@ -169,8 +169,8 @@ const YandexMap: React.FC<YandexMapProps> = ({
           }
         }
       }
-    } catch (err) {
-      console.error('Search error:', err);
+    } catch {
+      // Search error - silently ignore
     }
   };
 
@@ -184,8 +184,8 @@ const YandexMap: React.FC<YandexMapProps> = ({
         map.setCenter([latitude, longitude], 15);
         reverseGeocode(latitude, longitude);
       },
-      err => {
-        console.error('Geolocation error:', err);
+      () => {
+        // Geolocation error
         setError('Не удалось определить местоположение');
       }
     );

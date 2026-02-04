@@ -1,23 +1,24 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import {
+  getCommentStatusBadge,
+  getPostTypeBadge,
+  getUserStatusBadges,
+} from '../components/common/Badge';
+import { ConfirmModal } from '../components/common/ConfirmModal';
+import { Column, DataTable } from '../components/common/DataTable';
+import { Pagination } from '../components/common/Pagination';
+import { BanModal } from '../components/users/BanModal';
+import { usePagination } from '../hooks/usePagination';
 import { adminApi } from '../services/api';
 import {
-  AdminUserWithStats,
-  AdminPostWithStats,
   AdminComment,
+  AdminPostWithStats,
+  AdminUserWithStats,
   BanHistoryEntry,
   BanType,
 } from '../types';
-import {
-  getUserStatusBadges,
-  getPostTypeBadge,
-  getCommentStatusBadge,
-} from '../components/common/Badge';
-import { DataTable, Column } from '../components/common/DataTable';
-import { Pagination } from '../components/common/Pagination';
-import { ConfirmModal } from '../components/common/ConfirmModal';
-import { BanModal } from '../components/users/BanModal';
-import { usePagination } from '../hooks/usePagination';
 
 type Tab = 'posts' | 'comments' | 'history';
 

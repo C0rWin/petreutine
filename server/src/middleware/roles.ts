@@ -1,8 +1,9 @@
-import { Response, NextFunction } from 'express';
+import { NextFunction, Response } from 'express';
+
 import { query } from '../db/index.js';
-import { AppError } from './errorHandler.js';
-import { AuthenticatedRequest } from './auth.js';
 import type { UserRoleType } from './auth.js';
+import { AuthenticatedRequest } from './auth.js';
+import { AppError } from './errorHandler.js';
 
 // Cache for user roles (simple in-memory, clears on restart)
 const roleCache = new Map<string, { roles: UserRoleType[]; cachedAt: number }>();
@@ -80,7 +81,11 @@ export const requireAdmin = requireRole('admin');
 /**
  * Optional role check - attaches roles to request if authenticated
  */
-export async function attachRoles(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function attachRoles(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   try {
     if (req.userId) {
       req.userRoles = await getUserRoles(req.userId);

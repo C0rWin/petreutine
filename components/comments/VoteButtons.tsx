@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { VoteType } from '../../types';
 
 interface VoteButtonsProps {

@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+
 import { CommentWithUser } from '../types/comments.js';
 
 // Define event payload types
@@ -105,10 +106,9 @@ export async function registerEventHandlers(): Promise<void> {
   // Log registration results
   handlers.forEach((result, index) => {
     const names = ['notificationHandler', 'auditHandler'];
-    if (result.status === 'fulfilled') {
-      console.log(`[Events] Registered ${names[index]}`);
-    } else {
+    if (result.status === 'rejected') {
       console.error(`[Events] Failed to load ${names[index]}:`, result.reason);
     }
+    // Success case logged silently
   });
 }

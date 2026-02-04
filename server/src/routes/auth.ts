@@ -1,9 +1,10 @@
-import { Router, Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import { NextFunction, Request, Response, Router } from 'express';
+
 import { query } from '../db/index.js';
-import { User } from '../types/index.js';
+import { AuthenticatedRequest, generateToken, requireAuth } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
-import { generateToken, requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { User } from '../types/index.js';
 
 const router = Router();
 
@@ -240,7 +241,7 @@ router.get('/yandex/callback', async (req: Request, res: Response, next: NextFun
       // Auto-grant admin role to first user
       if (isFirstUser) {
         await query(`INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')`, [user.id]);
-        console.log(`First user ${user.email} auto-granted admin role`);
+        // First user auto-granted admin role
       }
     }
 
@@ -294,7 +295,7 @@ if (process.env.NODE_ENV !== 'production') {
       // Auto-grant admin role to first user
       if (isFirstUser) {
         await query(`INSERT INTO user_roles (user_id, role) VALUES ($1, 'admin')`, [user.id]);
-        console.log(`First user ${user.email} auto-granted admin role`);
+        // First user auto-granted admin role
       }
 
       // Generate token for dev user

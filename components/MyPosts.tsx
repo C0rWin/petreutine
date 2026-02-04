@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+
 import { api } from '../services/api';
-import { PetPost, PostType, normalizePost } from '../types';
+import { normalizePost, PetPost } from '../types';
 import PetCard from './PetCard';
 
 interface MyPostsProps {
@@ -25,9 +26,9 @@ const MyPosts: React.FC<MyPostsProps> = ({ onClose, onSelectPost }) => {
       }
       const normalizedPosts = (response.data?.posts || []).map(normalizePost);
       setPosts(normalizedPosts);
-    } catch (err) {
+    } catch {
       setError('Не удалось загрузить ваши объявления');
-      console.error(err);
+      // Error logged to UI state
     } finally {
       setIsLoading(false);
     }

@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { PostType, AnimalType, normalizePost, normalizeUser, PetPost, User } from '../../types';
+import { describe, expect, it } from 'vitest';
+
+import { AnimalType, normalizePost, normalizeUser, PetPost, PostType, User } from '../../types';
 
 describe('Types and Enums', () => {
   describe('PostType enum', () => {

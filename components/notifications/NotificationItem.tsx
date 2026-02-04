@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Notification, NotificationType } from '../../types';
 
 interface NotificationItemProps {

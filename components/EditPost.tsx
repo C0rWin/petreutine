@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { AnimalType, PostType, PetPost } from '../types';
+
 import { api } from '../services/api';
+import { AnimalType, PetPost, PostType } from '../types';
 import YandexMap from './YandexMap';
 
 interface EditPostProps {
@@ -72,7 +73,7 @@ const EditPost: React.FC<EditPostProps> = ({ post, onClose, onSuccess }) => {
         if (response.data) {
           setFormData(prev => ({ ...prev, imageUrl: response.data!.url }));
         }
-      } catch (err) {
+      } catch {
         setError('Не удалось загрузить изображение');
         setImagePreview(null);
         URL.revokeObjectURL(localPreview);
@@ -108,9 +109,9 @@ const EditPost: React.FC<EditPostProps> = ({ post, onClose, onSuccess }) => {
       if (response.data) {
         onSuccess(response.data);
       }
-    } catch (err) {
+    } catch {
       setError('Не удалось обновить объявление. Попробуйте ещё раз.');
-      console.error(err);
+      // Error logged to UI state
     } finally {
       setIsSubmitting(false);
     }

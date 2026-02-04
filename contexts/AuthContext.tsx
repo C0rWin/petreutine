@@ -1,13 +1,14 @@
 import React, {
   createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
   ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
 } from 'react';
-import { User, normalizeUser } from '../types';
+
 import { api } from '../services/api';
+import { normalizeUser, User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -47,8 +48,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.removeItem(TOKEN_KEY);
         api.setToken(null);
       }
-    } catch (err) {
-      console.error('Auth check failed:', err);
+    } catch {
+      // Auth check failed - clear token
       localStorage.removeItem(TOKEN_KEY);
       api.setToken(null);
     } finally {
@@ -85,8 +86,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     try {
       await api.logout();
-    } catch (err) {
-      console.error('Logout error:', err);
+    } catch {
+      // Logout error - continue with local cleanup
     } finally {
       localStorage.removeItem(TOKEN_KEY);
       api.setToken(null);

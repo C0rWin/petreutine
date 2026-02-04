@@ -81,14 +81,14 @@ const LocationMap: React.FC<LocationMapProps> = ({ latitude, longitude, location
 
           map.geoObjects.add(placemark);
           setIsLoading(false);
-        } catch (err) {
-          console.error('Error initializing map:', err);
+        } catch {
+          // Error initializing map
           setError('Ошибка загрузки карты');
           setIsLoading(false);
         }
       })
-      .catch(err => {
-        console.error('Failed to load Yandex Maps:', err);
+      .catch((err: Error) => {
+        // Failed to load Yandex Maps
         setError(err.message || 'Не удалось загрузить карту');
         setIsLoading(false);
       });

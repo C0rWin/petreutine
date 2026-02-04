@@ -1,6 +1,7 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { createMockRequest, createMockResponse, createMockNext, mockPost } from '../setup.js';
-import { PostType, AnimalType, PostStatus } from '../../types/index.js';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+
+import { AnimalType, PostStatus, PostType } from '../../types/index.js';
+import { createMockNext, createMockRequest, createMockResponse, mockPost } from '../setup.js';
 
 // Create mocks before importing the router
 const mockQueryFn =
@@ -343,7 +344,7 @@ describe('Search Routes', () => {
       await executeHandler('get', '/matches/:postId', mockReq as any, mockRes, mockNext);
 
       const response = (mockRes.json as jest.Mock).mock.calls[0][0] as {
-        matches: Array<{ reason: string; confidence: number }>;
+        matches: { reason: string; confidence: number }[];
       };
       expect(response.matches[0].reason).toContain('Тот же тип животного');
     });
@@ -365,7 +366,7 @@ describe('Search Routes', () => {
       await executeHandler('get', '/matches/:postId', mockReq as any, mockRes, mockNext);
 
       const response = (mockRes.json as jest.Mock).mock.calls[0][0] as {
-        matches: Array<{ reason: string; confidence: number }>;
+        matches: { reason: string; confidence: number }[];
       };
       expect(response.matches[0].confidence).toBeLessThanOrEqual(1);
     });

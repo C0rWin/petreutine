@@ -1,11 +1,12 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
+
 import {
-  PostType,
   AnimalType,
-  PostStatus,
   createPostSchema,
-  updatePostSchema,
+  PostStatus,
+  PostType,
   searchQuerySchema,
+  updatePostSchema,
 } from '../../types/index.js';
 
 describe('Types and Schemas', () => {

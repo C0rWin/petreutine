@@ -1,13 +1,14 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import { Router, Response, NextFunction, Request } from 'express';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { NextFunction, Request, Response, Router } from 'express';
+
+import { AnimalType, PetPostWithUser, PostStatus, PostType } from '../../types/index.js';
 import {
+  createMockNext,
   createMockRequest,
   createMockResponse,
-  createMockNext,
-  mockUser,
   mockPost,
+  mockUser,
 } from '../setup.js';
-import { PostType, AnimalType, PostStatus, PetPostWithUser } from '../../types/index.js';
 
 // Create mocks before importing the router
 const mockQueryFn =

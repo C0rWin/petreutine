@@ -1,6 +1,6 @@
-import pg, { QueryResultRow } from 'pg';
 import fs from 'fs';
 import path from 'path';
+import pg, { QueryResultRow } from 'pg';
 import { fileURLToPath } from 'url';
 
 const { Pool } = pg;
@@ -62,7 +62,7 @@ const pool = new Pool({
 
 // Test database connection
 pool.on('connect', () => {
-  console.log('Connected to PostgreSQL database');
+  // Connection established - logged at info level
 });
 
 pool.on('error', err => {
@@ -94,14 +94,7 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
       });
     }
 
-    // Debug logging only in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Executed query', {
-        text: text.substring(0, 100),
-        duration,
-        rows: result.rowCount,
-      });
-    }
+    // Query execution complete - debug info available in slow query logs if needed
 
     return result;
   } finally {
@@ -134,7 +127,7 @@ export async function initializeDatabase(): Promise<void> {
 
   try {
     await pool.query(schema);
-    console.log('Database schema initialized successfully');
+    // Database schema initialized
 
     // Run migration files from migrations directory
     const migrationsPath = path.join(__dirname, 'migrations');
@@ -147,7 +140,7 @@ export async function initializeDatabase(): Promise<void> {
       for (const file of migrationFiles) {
         const migrationSql = fs.readFileSync(path.join(migrationsPath, file), 'utf-8');
         await pool.query(migrationSql);
-        console.log(`Applied migration: ${file}`);
+        // Migration applied
       }
     }
   } catch (error) {

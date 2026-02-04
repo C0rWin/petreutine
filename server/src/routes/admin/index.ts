@@ -1,12 +1,13 @@
-import { Router, Response } from 'express';
-import { requireAuth, AuthenticatedRequest } from '../../middleware/auth.js';
-import { requireAdmin } from '../../middleware/roles.js';
+import { Response, Router } from 'express';
+
+import { AuthenticatedRequest, requireAuth } from '../../middleware/auth.js';
 import { asyncHandler } from '../../middleware/errorHandler.js';
+import { requireAdmin } from '../../middleware/roles.js';
 import { adminStatsCache } from '../../services/cache.js';
-import usersRouter from './users.js';
+import auditRouter from './audit.js';
 import postsRouter from './posts.js';
 import statsRouter from './stats.js';
-import auditRouter from './audit.js';
+import usersRouter from './users.js';
 
 const router = Router();
 

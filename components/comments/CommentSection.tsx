@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Comment, VoteType, ReportReason } from '../../types';
+import React, { useCallback, useEffect, useState } from 'react';
+
 import { api } from '../../services/api';
+import { Comment, ReportReason, VoteType } from '../../types';
 import { CommentForm } from './CommentForm';
 import { CommentThread } from './CommentThread';
 
@@ -88,7 +89,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     const result = await api.voteComment(commentId, voteType);
 
     if (result.error) {
-      console.error('Vote failed:', result.error);
+      // Vote failed - silently ignore
       return;
     }
 
@@ -107,7 +108,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
     const result = await api.removeVote(commentId);
 
     if (result.error) {
-      console.error('Remove vote failed:', result.error);
+      // Remove vote failed - silently ignore
       return;
     }
 

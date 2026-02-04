@@ -1,5 +1,6 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { ZodError, z } from 'zod';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { z, ZodError } from 'zod';
+
 import { AppError, errorHandler, notFoundHandler } from '../../middleware/errorHandler.js';
 import { createMockResponse } from '../setup.js';
 

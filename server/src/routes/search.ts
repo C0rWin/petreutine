@@ -1,6 +1,7 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
+
 import { query } from '../db/index.js';
-import { searchQuerySchema, PetPostWithUser } from '../types/index.js';
+import { PetPostWithUser, searchQuerySchema } from '../types/index.js';
 
 const router = Router();
 

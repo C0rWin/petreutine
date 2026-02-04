@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+
 import { query } from '../db/index.js';
 import { User } from '../types/index.js';
 
@@ -162,7 +163,7 @@ export async function optionalAuth(
     }
 
     next();
-  } catch (error) {
+  } catch {
     // Don't fail on optional auth errors, just continue without user
     next();
   }

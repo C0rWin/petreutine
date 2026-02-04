@@ -1,8 +1,9 @@
-import { Router, Response, NextFunction } from 'express';
+import { NextFunction, Response, Router } from 'express';
+
 import { query } from '../db/index.js';
-import { getNotificationsQuerySchema, NotificationWithActor } from '../types/comments.js';
+import { AuthenticatedRequest, requireAuth } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
-import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { getNotificationsQuerySchema, NotificationWithActor } from '../types/comments.js';
 
 const router = Router();
 

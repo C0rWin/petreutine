@@ -1,6 +1,7 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import { createMockRequest, createMockResponse, createMockNext, mockUser } from '../setup.js';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import crypto from 'crypto';
+
+import { createMockNext, createMockRequest, createMockResponse, mockUser } from '../setup.js';
 
 // Create mocks before importing the router
 const mockQueryFn =

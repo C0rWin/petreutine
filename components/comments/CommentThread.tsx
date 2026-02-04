@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Comment, VoteType, ReportReason } from '../../types';
+
+import { Comment, ReportReason, VoteType } from '../../types';
 import { CommentItem } from './CommentItem';
 
 interface CommentThreadProps {

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Notification } from '../../types';
+import React, { useEffect, useRef, useState } from 'react';
+
 import { api } from '../../services/api';
+import { Notification } from '../../types';
 import { NotificationItem } from './NotificationItem';
 
 interface NotificationDropdownProps {

@@ -1,15 +1,16 @@
-import { Router, Response, NextFunction } from 'express';
+import { NextFunction, Response, Router } from 'express';
+
 import { query } from '../db/index.js';
-import {
-  createPostSchema,
-  updatePostSchema,
-  PetPostWithUser,
-  CreatePostInput,
-  UpdatePostInput,
-} from '../types/index.js';
+import { AuthenticatedRequest, requireAuth } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
-import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
 import { createPostLimiter } from '../middleware/security.js';
+import {
+  CreatePostInput,
+  createPostSchema,
+  PetPostWithUser,
+  UpdatePostInput,
+  updatePostSchema,
+} from '../types/index.js';
 
 const router = Router();
 

@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 
 // General API rate limiter
@@ -138,7 +138,7 @@ export function requestLogger(req: Request, _res: Response, next: NextFunction):
     };
 
     // Log to stdout for cloud logging services
-    console.log(JSON.stringify(logData));
+    process.stdout.write(JSON.stringify(logData) + '\n');
   }
 
   next();

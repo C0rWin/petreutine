@@ -1,6 +1,7 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import jwt from 'jsonwebtoken';
-import { createMockRequest, createMockResponse, createMockNext, mockUser } from '../setup.js';
+
+import { createMockNext, createMockRequest, createMockResponse, mockUser } from '../setup.js';
 
 // Create a mock for the query function with proper typing
 const mockQueryFn = jest.fn<() => Promise<{ rows: any[]; rowCount: number }>>();

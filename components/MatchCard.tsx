@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { PetPost, PostType } from '../types';
 
 interface MatchCardProps {

@@ -126,26 +126,26 @@ export interface OverviewStats {
 
 export interface UserStats {
   total_users: number;
-  users_by_day: Array<{ date: string; count: number }>;
-  active_users_by_day: Array<{ date: string; count: number }>;
+  users_by_day: { date: string; count: number }[];
+  active_users_by_day: { date: string; count: number }[];
   banned_users: number;
   comment_banned_users: number;
-  top_posters: Array<{ id: string; name: string; avatar_url: string | null; posts_count: number }>;
-  top_commenters: Array<{
+  top_posters: { id: string; name: string; avatar_url: string | null; posts_count: number }[];
+  top_commenters: {
     id: string;
     name: string;
     avatar_url: string | null;
     comments_count: number;
-  }>;
+  }[];
 }
 
 export interface PostStats {
   total_posts: number;
   open_posts: number;
   resolved_posts: number;
-  posts_by_day: Array<{ date: string; count: number }>;
+  posts_by_day: { date: string; count: number }[];
   posts_by_type: { lost: number; found: number };
-  posts_by_animal_type: Array<{ animal_type: string; count: number }>;
+  posts_by_animal_type: { animal_type: string; count: number }[];
   resolution_rate: number;
   avg_time_to_resolve_hours: number | null;
 }
@@ -153,7 +153,7 @@ export interface PostStats {
 export interface CommentStats {
   total_comments: number;
   comments_by_status: { pending: number; approved: number; rejected: number; flagged: number };
-  comments_by_day: Array<{ date: string; count: number }>;
+  comments_by_day: { date: string; count: number }[];
   pending_reports: number;
   avg_moderation_score: number | null;
   auto_approved_rate: number;

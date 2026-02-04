@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import { ReportReason } from '../../types';
 
 interface ReportModalProps {

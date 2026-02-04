@@ -1,9 +1,10 @@
-import { Router, Response, NextFunction } from 'express';
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { NextFunction, Response, Router } from 'express';
 import multer from 'multer';
 import sharp from 'sharp';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
-import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
+
+import { AuthenticatedRequest, requireAuth } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
 
 const router = Router();

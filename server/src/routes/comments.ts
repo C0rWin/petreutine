@@ -1,21 +1,21 @@
-import { Router, Response, NextFunction } from 'express';
+import { NextFunction, Response, Router } from 'express';
+import rateLimit from 'express-rate-limit';
+
 import { query } from '../db/index.js';
+import { AuthenticatedRequest, optionalAuth, requireAuth } from '../middleware/auth.js';
+import { AppError } from '../middleware/errorHandler.js';
+import { getModerationDecision, moderateContent } from '../services/aiModeration.js';
+import { eventBus } from '../services/events.js';
 import {
+  CommentStatus,
+  CommentWithUser,
+  CreateCommentInput,
   createCommentSchema,
+  getCommentsQuerySchema,
+  reportCommentSchema,
   updateCommentSchema,
   voteSchema,
-  reportCommentSchema,
-  getCommentsQuerySchema,
-  CommentWithUser,
-  CommentStatus,
-  VoteType,
-  CreateCommentInput,
 } from '../types/comments.js';
-import { AppError } from '../middleware/errorHandler.js';
-import { requireAuth, optionalAuth, AuthenticatedRequest } from '../middleware/auth.js';
-import { moderateContent, getModerationDecision } from '../services/aiModeration.js';
-import { eventBus } from '../services/events.js';
-import rateLimit from 'express-rate-limit';
 
 const router = Router();
 

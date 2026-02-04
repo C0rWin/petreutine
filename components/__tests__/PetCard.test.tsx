@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+
+import { PetPost, PostType, User } from '../../types';
 import PetCard from '../PetCard';
-import { PostType, PetPost, User } from '../../types';
 
 const mockUser: User = {
   id: 'user-1',

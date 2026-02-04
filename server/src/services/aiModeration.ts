@@ -1,11 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';
+
+import { query } from '../db/index.js';
 import {
   AIModerationResult,
-  ModerationDecision,
   CommentStatus,
+  ModerationDecision,
   NotificationType,
 } from '../types/comments.js';
-import { query } from '../db/index.js';
 
 // ============================================
 // LOGGING INFRASTRUCTURE
@@ -32,7 +33,7 @@ function logModerationEvent(
   const prefix = `[AI_MOD_${severity}]`;
   const timestamp = new Date().toISOString();
   // Include full content for debugging - do NOT truncate
-  console.log(`${prefix} ${timestamp} ${message}`, JSON.stringify(context, null, 2));
+  process.stdout.write(`${prefix} ${timestamp} ${message} ${JSON.stringify(context, null, 2)}\n`);
 }
 
 // ============================================
@@ -202,7 +203,7 @@ RESPOND IN VALID JSON FORMAT ONLY (no markdown, no backticks):
       });
 
       return result;
-    } catch (parseError) {
+    } catch {
       logModerationEvent(LogSeverity.WARN, 'Failed to parse AI response', {
         content: content,
         error: responseText,

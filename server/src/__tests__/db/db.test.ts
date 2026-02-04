@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // Mock pg Pool with proper types
 const mockQuery = jest.fn<(...args: any[]) => Promise<any>>();

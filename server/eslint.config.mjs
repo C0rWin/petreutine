@@ -34,8 +34,20 @@ export default defineConfig(
       },
     },
     rules: {
-      '@typescript-eslint/explicit-function-return-type': 'error',
-      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/explicit-function-return-type': [
+        'error',
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: true,
+        },
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      '@typescript-eslint/no-non-null-assertion': 'off', // Common in Express routes after auth middleware
+      '@typescript-eslint/no-empty-function': 'off', // Needed for mock stubs
       'no-console': ['error', { allow: ['warn', 'error'] }], // Backend needs logging
       'prefer-const': 'error',
     },
@@ -46,6 +58,8 @@ export default defineConfig(
     rules: {
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
       'no-console': 'off',
     },
   },
