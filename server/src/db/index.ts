@@ -44,12 +44,19 @@ function getSSLConfig(): boolean | { rejectUnauthorized: boolean; ca?: string } 
 
 const sslConfig = getSSLConfig();
 
+// Environment-driven pool configuration with production-scale defaults
+const DB_POOL_SIZE = parseInt(process.env.DB_POOL_SIZE || '50', 10);
+const DB_IDLE_TIMEOUT = parseInt(process.env.DB_IDLE_TIMEOUT || '600000', 10);
+const DB_CONNECTION_TIMEOUT = parseInt(process.env.DB_CONNECTION_TIMEOUT || '30000', 10);
+const SLOW_QUERY_THRESHOLD = parseInt(process.env.SLOW_QUERY_THRESHOLD_MS || '1000', 10);
+const QUERY_TIMEOUT = parseInt(process.env.QUERY_TIMEOUT_MS || '30000', 10);
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: sslConfig,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  max: DB_POOL_SIZE,
+  idleTimeoutMillis: DB_IDLE_TIMEOUT,
+  connectionTimeoutMillis: DB_CONNECTION_TIMEOUT,
 });
 
 // Test database connection
@@ -67,14 +74,34 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   params?: unknown[]
 ): Promise<pg.QueryResult<T>> {
   const start = Date.now();
-  const result = await pool.query<T>(text, params);
-  const duration = Date.now() - start;
+  const client = await pool.connect();
 
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Executed query', { text: text.substring(0, 100), duration, rows: result.rowCount });
+  try {
+    // Set per-query statement timeout to prevent runaway queries
+    await client.query(`SET statement_timeout = ${QUERY_TIMEOUT}`);
+
+    const result = await client.query<T>(text, params);
+    const duration = Date.now() - start;
+
+    // Always log slow queries regardless of environment
+    if (duration > SLOW_QUERY_THRESHOLD) {
+      console.warn('[SLOW_QUERY]', {
+        query: text.substring(0, 200),
+        duration_ms: duration,
+        threshold_ms: SLOW_QUERY_THRESHOLD,
+        params_count: params?.length || 0
+      });
+    }
+
+    // Debug logging only in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Executed query', { text: text.substring(0, 100), duration, rows: result.rowCount });
+    }
+
+    return result;
+  } finally {
+    client.release();
   }
-
-  return result;
 }
 
 export async function getClient(): Promise<pg.PoolClient> {
