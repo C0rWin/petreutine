@@ -125,3 +125,77 @@ jobs:
     steps:
       - name: Quality gate passed
         run: echo "All quality gates passed successfully!"
+
+  # Performance benchmarks (non-blocking, informational)
+  performance-benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: [backend-test]
+    # Only run on main branch pushes (not PRs) to avoid slow PR checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install backend dependencies
+        run: cd server && npm ci
+
+      - name: Build backend
+        run: cd server && npm run build
+
+      - name: Run database migrations
+        run: cd server && npm run db:migrate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+
+      - name: Start backend server
+        run: |
+          cd server
+          npm start &
+          sleep 5
+        env:
+          NODE_ENV: production
+          PORT: 3001
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          JWT_SECRET: benchmark-jwt-secret
+          CORS_ORIGIN: http://localhost:3000
+          FRONTEND_URL: http://localhost:3000
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Run search benchmarks
+        run: k6 run server/benchmarks/search.bench.js --env BASE_URL=http://localhost:3001
+        continue-on-error: true
+
+      - name: Run posts benchmarks
+        run: k6 run server/benchmarks/posts.bench.js --env BASE_URL=http://localhost:3001
+        continue-on-error: true
