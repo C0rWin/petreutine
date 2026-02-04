@@ -132,6 +132,20 @@ export async function initializeDatabase(): Promise<void> {
   try {
     await pool.query(schema);
     console.log('Database schema initialized successfully');
+
+    // Run migration files from migrations directory
+    const migrationsPath = path.join(__dirname, 'migrations');
+    if (fs.existsSync(migrationsPath)) {
+      const migrationFiles = fs.readdirSync(migrationsPath)
+        .filter(f => f.endsWith('.sql'))
+        .sort();
+
+      for (const file of migrationFiles) {
+        const migrationSql = fs.readFileSync(path.join(migrationsPath, file), 'utf-8');
+        await pool.query(migrationSql);
+        console.log(`Applied migration: ${file}`);
+      }
+    }
   } catch (error) {
     console.error('Error initializing database schema:', error);
     throw error;
