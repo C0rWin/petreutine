@@ -19,6 +19,12 @@
 		reverse_proxy api:3001
 	}
 
+	# Bare /admin -> /admin/ so the admin SPA loads instead of falling through to
+	# the main-site SPA fallback below.
+	handle /admin {
+		redir * /admin/ 308
+	}
+
 	# Admin SPA (built with base /admin/). handle_path strips the prefix so
 	# /admin/assets/x.js resolves to /srv/admin/assets/x.js.
 	handle_path /admin/* {
