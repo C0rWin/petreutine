@@ -136,10 +136,12 @@ History persists in sqlite on the `gatus_data` volume. Scope: this covers servic
 Setup (one-time):
 
 1. **DNS:** add `A status.{DOMAIN} → 5.42.108.44` (same as `cdn`).
-2. **Basic-auth credential** — generate a bcrypt hash and put user + hash in `.env`:
+2. **Basic-auth credential** — create `status.env` (separate from `.env`, gitignored,
+   because the bcrypt `$` chars break compose interpolation of `.env`):
    ```bash
+   cp status.env.example status.env
    docker run --rm caddy:2-alpine caddy hash-password --plaintext 'YOUR_PASSWORD'
-   # paste into .env: STATUS_USER=admin / STATUS_HASH=<hash>
+   # put STATUS_USER=admin and the full $2a$... hash into status.env
    ```
 3. **Apply:** `docker compose --env-file .env up -d --build caddy && docker compose --env-file .env up -d gatus`
    (Caddy rebuilds because the Caddyfile is baked into its image; `gatus` is a new service.)

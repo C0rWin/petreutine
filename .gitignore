@@ -21,6 +21,8 @@ server/dist
 .env.local
 .env.*.local
 *.local
+status.env
+deploy/status.env
 
 # Editor directories and files
 .vscode/*
@@ -38,3 +40,4 @@ coverage
 
 # OS files
 Thumbs.db
+.gstack/

@@ -124,10 +124,13 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    # env_file (not `environment:`) so the bcrypt STATUS_HASH with its $ signs is
-    # passed verbatim and not mangled by compose interpolation. Caddyfile reads
-    # DOMAIN/ACME_EMAIL/STATUS_USER/STATUS_HASH from the container env.
-    env_file: .env
+    # env_file (not `environment:`) so values pass verbatim to the container, where
+    # the Caddyfile reads them via {$VAR}. The bcrypt STATUS_HASH lives in its own
+    # status.env (NOT .env) so its $ signs never hit compose's ${...} interpolation
+    # of .env. status.env is gitignored; create it on the host (see README).
+    env_file:
+      - .env
+      - status.env
     volumes:
       - caddy_data:/data
       - caddy_config:/config
