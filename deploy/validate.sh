@@ -47,7 +47,7 @@ if curl -fsS -o /dev/null -w '%{http_code}' "https://cdn.${DOMAIN}/${DO_SPACES_B
   ok "cdn.${DOMAIN} reachable (TLS ok)"; else bad "cdn subdomain — DNS/TLS?"; fi
 
 echo "== /internal must NOT be reachable publicly =="
-CODE=$(curl -fsS -o /dev/null -w '%{http_code}' "https://${DOMAIN}/internal/db-url" 2>/dev/null || echo 000)
+CODE=$(curl -sS -o /dev/null -w '%{http_code}' "https://${DOMAIN}/internal/db-url" 2>/dev/null || echo 000)
 if [ "$CODE" = "404" ] || [ "$CODE" = "000" ]; then
   ok "/internal not exposed (got $CODE)"; else bad "/internal reachable publicly (got $CODE)!"; fi
 
