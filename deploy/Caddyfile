@@ -8,6 +8,10 @@
 
 	# Backend API. /internal/* is deliberately NOT proxied, so the destructive
 	# /internal/db-reset endpoint is unreachable from the public internet.
+	# Return a clean 404 rather than letting it fall through to the SPA.
+	handle /internal/* {
+		respond 404
+	}
 	handle /api/* {
 		reverse_proxy api:3001
 	}
