@@ -17,6 +17,13 @@ function getSSLConfig(): boolean | { rejectUnauthorized: boolean; ca?: string } 
     process.env.DATABASE_URL?.includes('localhost') ||
     process.env.DATABASE_URL?.includes('127.0.0.1');
 
+  // Explicit opt-out for trusted private networks (e.g. a Postgres container on
+  // the same Docker network). Use this instead of NODE_TLS_REJECT_UNAUTHORIZED=0,
+  // which would disable certificate validation for every outbound TLS connection.
+  if (process.env.DATABASE_SSL === 'disable') {
+    return false;
+  }
+
   if (isProduction) {
     // Production requires proper SSL verification
     const caCert = process.env.DATABASE_CA_CERT;

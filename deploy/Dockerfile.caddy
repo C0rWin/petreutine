@@ -1,0 +1,30 @@
+# Builds the two static frontends (web + admin) and bakes them into a Caddy image.
+# Build context is the repository root (see docker-compose.yml: context: ..).
+
+# ---- Build the main web SPA (repo root) ----
+FROM node:20-alpine AS web
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+ARG VITE_API_URL=""
+ARG VITE_YANDEX_MAPS_API_KEY=""
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_YANDEX_MAPS_API_KEY=$VITE_YANDEX_MAPS_API_KEY
+RUN npm run build
+
+# ---- Build the admin SPA (admin/) ----
+FROM node:20-alpine AS admin
+WORKDIR /app
+COPY admin/package*.json ./
+RUN npm ci
+COPY admin/ .
+ARG VITE_API_URL=""
+ENV VITE_API_URL=$VITE_API_URL
+RUN npm run build
+
+# ---- Final Caddy image ----
+FROM caddy:2-alpine
+COPY --from=web /app/dist /srv/web
+COPY --from=admin /app/dist /srv/admin
+COPY deploy/Caddyfile /etc/caddy/Caddyfile

@@ -1,0 +1,47 @@
+{
+	email {$ACME_EMAIL}
+}
+
+# Main app + admin + API, all on one host with automatic Let's Encrypt TLS.
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Backend API. /internal/* is deliberately NOT proxied, so the destructive
+	# /internal/db-reset endpoint is unreachable from the public internet.
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+	handle /health {
+		reverse_proxy api:3001
+	}
+
+	# Admin SPA (built with base /admin/). handle_path strips the prefix so
+	# /admin/assets/x.js resolves to /srv/admin/assets/x.js.
+	handle_path /admin/* {
+		root * /srv/admin
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Main SPA with client-side routing fallback.
+	handle {
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 10MiB
+			roll_keep 10
+		}
+		format json
+	}
+}
+
+# Public object storage (MinIO). Path-style URLs include the bucket:
+#   https://cdn.<domain>/<bucket>/uploads/<user>/<file>.jpg
+cdn.{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy minio:9000
+}

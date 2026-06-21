@@ -1,0 +1,145 @@
+# ДомойСкорей — self-hosted stack for a single host (5.42.108.44)
+#
+# Public surface = caddy only (80/443). db, minio and api are NOT published to
+# the host; they are reachable solely over the private "internal" bridge network.
+#
+# Bring up:   docker compose --env-file .env up -d --build
+# Logs:       docker compose logs -f api
+# Validate:   ./validate.sh
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [internal]
+    logging: *default-logging
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks: [internal]
+    logging: *default-logging
+
+  # One-shot: create the bucket and make object reads anonymous (public download).
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+      mc mb -p local/${DO_SPACES_BUCKET} || true &&
+      mc anonymous set download local/${DO_SPACES_BUCKET} &&
+      echo 'bucket ready: ${DO_SPACES_BUCKET}'
+      "
+    restart: 'no'
+    networks: [internal]
+    logging: *default-logging
+
+  api:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: '3001'
+      # api <-> db over the private network: plaintext is acceptable here.
+      # For defence-in-depth, configure TLS on Postgres and set DATABASE_CA_CERT
+      # instead of DATABASE_SSL=disable (see README "Hardening the DB link").
+      DATABASE_SSL: disable
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      AUTO_MIGRATE: 'true'
+      # MinIO (S3-compatible) — path-style addressing is mandatory.
+      S3_FORCE_PATH_STYLE: 'true'
+      DO_SPACES_ENDPOINT: http://minio:9000
+      DO_SPACES_KEY: ${MINIO_ROOT_USER}
+      DO_SPACES_SECRET: ${MINIO_ROOT_PASSWORD}
+      DO_SPACES_BUCKET: ${DO_SPACES_BUCKET}
+      DO_SPACES_REGION: us-east-1
+      DO_SPACES_CDN_URL: https://cdn.${DOMAIN}/${DO_SPACES_BUCKET}
+      CORS_ORIGIN: https://${DOMAIN}
+      FRONTEND_URL: https://${DOMAIN}
+      YANDEX_REDIRECT_URI: https://${DOMAIN}/api/auth/yandex/callback
+    depends_on:
+      db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    expose:
+      - '3001'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3001/health']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [internal]
+    logging: *default-logging
+
+  caddy:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.caddy
+      args:
+        # Baked into the static bundle at build time.
+        VITE_API_URL: ''
+        VITE_YANDEX_MAPS_API_KEY: ${VITE_YANDEX_MAPS_API_KEY}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/var/log/caddy
+    networks: [internal]
+    logging: *default-logging
+
+volumes:
+  pgdata:
+  miniodata:
+  caddy_data:
+  caddy_config:
+  caddy_logs:
+
+networks:
+  internal:
+    driver: bridge

@@ -17,6 +17,9 @@ const s3Client = new S3Client({
     accessKeyId: process.env.DO_SPACES_KEY || '',
     secretAccessKey: process.env.DO_SPACES_SECRET || '',
   },
+  // MinIO and other self-hosted S3 backends require path-style addressing
+  // (http://host/bucket/key) rather than virtual-host style (http://bucket.host/key).
+  forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',
 });
 
 const BUCKET_NAME = process.env.DO_SPACES_BUCKET || 'petreunite';
