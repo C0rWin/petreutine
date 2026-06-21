@@ -52,9 +52,15 @@ endpoints:
   - name: 'Auth (OAuth init redirects to Yandex)'
     group: 'Application'
     url: 'https://petreunite.info/api/auth/yandex'
-    interval: 120s
+    interval: 300s
+    # Don't follow the redirect: we want to assert the 302 itself, not chase it to
+    # oauth.yandex.ru (which returns 200). Longer interval also keeps well under the
+    # auth rate limit and minimizes throwaway oauth_states rows.
+    client:
+      ignore-redirect: true
     conditions:
       - '[STATUS] == 302'
+      - '[RESPONSE_TIME] < 2000'
 
   - name: 'TLS certificate expiry'
     group: 'Application'
