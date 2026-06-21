@@ -1,0 +1,118 @@
+# Gatus health/uptime dashboard for ДомойСкорей.
+# Probes run from inside the container: internal services over the Docker network
+# (api/db/minio), public surface + external deps over the internet.
+# History persists in sqlite on the gatus_data volume.
+
+storage:
+  type: sqlite
+  path: /data/gatus.db
+
+ui:
+  title: 'ДомойСкорей — Status'
+  header: 'ДомойСкорей — System Health'
+  description: 'Liveness and response times for the app and everything it depends on'
+
+# Keep the dashboard itself out of the noise; alerting can be added later
+# (slack/email/telegram providers) under an `alerting:` block.
+
+endpoints:
+  # ---- The application (public surface, through Caddy + TLS) ----
+  - name: 'App health'
+    group: 'Application'
+    url: 'https://petreunite.info/health'
+    interval: 30s
+    conditions:
+      - '[STATUS] == 200'
+      - '[BODY].status == ok'
+      - '[RESPONSE_TIME] < 1500'
+
+  - name: 'Frontend'
+    group: 'Application'
+    url: 'https://petreunite.info/'
+    interval: 60s
+    conditions:
+      - '[STATUS] == 200'
+      - '[RESPONSE_TIME] < 2000'
+
+  - name: 'Admin panel'
+    group: 'Application'
+    url: 'https://petreunite.info/admin/'
+    interval: 60s
+    conditions:
+      - '[STATUS] == 200'
+
+  - name: 'Public API (posts)'
+    group: 'Application'
+    url: 'https://petreunite.info/api/posts'
+    interval: 60s
+    conditions:
+      - '[STATUS] == 200'
+      - '[BODY].total >= 0'
+
+  - name: 'Auth (OAuth init redirects to Yandex)'
+    group: 'Application'
+    url: 'https://petreunite.info/api/auth/yandex'
+    interval: 120s
+    conditions:
+      - '[STATUS] == 302'
+
+  - name: 'TLS certificate expiry'
+    group: 'Application'
+    url: 'https://petreunite.info/health'
+    interval: 6h
+    conditions:
+      - '[CERTIFICATE_EXPIRATION] > 168h' # warn if cert has < 7 days left
+
+  # ---- Backing services (private Docker network) ----
+  - name: 'API (internal)'
+    group: 'Services'
+    url: 'http://api:3001/health'
+    interval: 30s
+    conditions:
+      - '[STATUS] == 200'
+      - '[BODY].status == ok'
+
+  - name: 'PostgreSQL'
+    group: 'Services'
+    url: 'tcp://db:5432'
+    interval: 30s
+    conditions:
+      - '[CONNECTED] == true'
+
+  - name: 'MinIO (object storage)'
+    group: 'Services'
+    url: 'http://minio:9000/minio/health/live'
+    interval: 30s
+    conditions:
+      - '[STATUS] == 200'
+
+  - name: 'CDN (images via Caddy)'
+    group: 'Services'
+    url: 'https://cdn.petreunite.info/petreunite/'
+    interval: 60s
+    conditions:
+      - '[STATUS] == 200'
+
+  # ---- External dependencies (Yandex) ----
+  # Loose conditions: we only care that the dependency is reachable, not its exact
+  # response to an unauthenticated probe.
+  - name: 'Yandex OAuth'
+    group: 'External dependencies'
+    url: 'https://oauth.yandex.ru/authorize'
+    interval: 120s
+    conditions:
+      - '[STATUS] < 500'
+
+  - name: 'Yandex Login (userinfo)'
+    group: 'External dependencies'
+    url: 'https://login.yandex.ru/info'
+    interval: 120s
+    conditions:
+      - '[STATUS] < 500'
+
+  - name: 'Yandex Maps API'
+    group: 'External dependencies'
+    url: 'https://api-maps.yandex.ru/2.1/'
+    interval: 120s
+    conditions:
+      - '[STATUS] < 500'

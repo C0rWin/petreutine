@@ -119,6 +119,36 @@ Container logs are JSON-file with rotation (10 MB × 5). Caddy also writes a rol
 
 ---
 
+## Status dashboard (Gatus)
+
+Live health + uptime + response times for the app, every backing service, and the
+external Yandex dependencies. Served behind HTTP basic auth at **https://status.{DOMAIN}**.
+
+What it monitors (`deploy/gatus/config.yaml`):
+
+- **Application** — public `/health`, frontend, admin panel, public API, OAuth-init redirect, TLS-cert-expiry warning.
+- **Services** — API (internal `/health`), PostgreSQL (TCP), MinIO (`/minio/health/live`), CDN.
+- **External dependencies** — Yandex OAuth, Yandex Login (userinfo), Yandex Maps API.
+
+History persists in sqlite on the `gatus_data` volume. Scope: this covers service
+**liveness / uptime / latency**, not host CPU/RAM/disk (add netdata or glances for those).
+
+Setup (one-time):
+
+1. **DNS:** add `A status.{DOMAIN} → 5.42.108.44` (same as `cdn`).
+2. **Basic-auth credential** — generate a bcrypt hash and put user + hash in `.env`:
+   ```bash
+   docker run --rm caddy:2-alpine caddy hash-password --plaintext 'YOUR_PASSWORD'
+   # paste into .env: STATUS_USER=admin / STATUS_HASH=<hash>
+   ```
+3. **Apply:** `docker compose --env-file .env up -d --build caddy && docker compose --env-file .env up -d gatus`
+   (Caddy rebuilds because the Caddyfile is baked into its image; `gatus` is a new service.)
+
+To add alerting later (Slack/Telegram/email on downtime), add an `alerting:` block to
+`gatus/config.yaml` and `alerts:` under each endpoint — see https://github.com/TwiN/gatus.
+
+---
+
 ## Yandex authentication — the thing most likely to break
 
 The OAuth flow only works when **three values agree** and the host is HTTPS:

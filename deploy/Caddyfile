@@ -49,3 +49,13 @@ cdn.{$DOMAIN} {
 	encode zstd gzip
 	reverse_proxy minio:9000
 }
+
+# Health/uptime dashboard (Gatus), protected by HTTP basic auth.
+# STATUS_USER / STATUS_HASH come from .env (hash via `caddy hash-password`).
+status.{$DOMAIN} {
+	encode zstd gzip
+	basic_auth {
+		{$STATUS_USER} {$STATUS_HASH}
+	}
+	reverse_proxy gatus:8080
+}

@@ -120,16 +120,37 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+      - gatus
     ports:
       - '80:80'
       - '443:443'
-    environment:
-      DOMAIN: ${DOMAIN}
-      ACME_EMAIL: ${ACME_EMAIL}
+    # env_file (not `environment:`) so the bcrypt STATUS_HASH with its $ signs is
+    # passed verbatim and not mangled by compose interpolation. Caddyfile reads
+    # DOMAIN/ACME_EMAIL/STATUS_USER/STATUS_HASH from the container env.
+    env_file: .env
     volumes:
       - caddy_data:/data
       - caddy_config:/config
       - caddy_logs:/var/log/caddy
+    networks: [internal]
+    logging: *default-logging
+
+  # Health/uptime dashboard. Probes the app, internal services and external
+  # dependencies; served (behind basic auth) at https://status.${DOMAIN}.
+  gatus:
+    image: ghcr.io/twin/gatus:latest
+    restart: unless-stopped
+    volumes:
+      - ./gatus/config.yaml:/config/config.yaml:ro
+      - gatus_data:/data
+    expose:
+      - '8080'
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     networks: [internal]
     logging: *default-logging
 
@@ -139,6 +160,7 @@ volumes:
   caddy_data:
   caddy_config:
   caddy_logs:
+  gatus_data:
 
 networks:
   internal:
