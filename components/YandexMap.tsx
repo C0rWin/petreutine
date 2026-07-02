@@ -47,12 +47,21 @@ interface YandexMapProps {
   initialLocation?: string;
 }
 
+// Fallback center (Moscow) used only when we have no post coords and geolocation
+// is unavailable or denied.
+const MOSCOW_CENTER: [number, number] = [55.751574, 37.573856];
+
 const YandexMap: React.FC<YandexMapProps> = ({
   onLocationSelect,
-  initialLatitude = 55.751574,
-  initialLongitude = 37.573856,
+  initialLatitude,
+  initialLongitude,
   initialLocation = '',
 }) => {
+  const hasInitialCoords =
+    typeof initialLatitude === 'number' && typeof initialLongitude === 'number';
+  const startCenter: [number, number] = hasInitialCoords
+    ? [initialLatitude as number, initialLongitude as number]
+    : MOSCOW_CENTER;
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<ymaps.Map | null>(null);
   const [placemark, setPlacemark] = useState<ymaps.Placemark | null>(null);
@@ -69,15 +78,15 @@ const YandexMap: React.FC<YandexMapProps> = ({
 
         try {
           const newMap = new window.ymaps.Map(mapRef.current, {
-            center: [initialLatitude, initialLongitude],
-            zoom: 12,
+            center: startCenter,
+            zoom: hasInitialCoords ? 15 : 12,
             controls: ['zoomControl', 'geolocationControl'],
           });
 
           currentMap = newMap;
 
           const newPlacemark = new window.ymaps.Placemark(
-            [initialLatitude, initialLongitude],
+            startCenter,
             {
               hintContent: 'Местоположение питомца',
               balloonContent: initialLocation || 'Выберите местоположение',
@@ -108,6 +117,37 @@ const YandexMap: React.FC<YandexMapProps> = ({
           setMap(newMap);
           setPlacemark(newPlacemark);
           setIsLoading(false);
+
+          // Auto-focus on the user's current location for new posts (when the
+          // caller didn't pass coordinates, e.g. editing an existing post).
+          if (!hasInitialCoords && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              position => {
+                const { latitude, longitude } = position.coords;
+                newPlacemark.geometry?.setCoordinates([latitude, longitude]);
+                newMap.setCenter([latitude, longitude], 15);
+                window.ymaps
+                  .geocode([latitude, longitude])
+                  .then(result => {
+                    const geo = result.geoObjects.get(0);
+                    if (geo) {
+                      const address = geo.getAddressLine();
+                      setSearchQuery(address);
+                      newPlacemark.properties?.set('balloonContent', address);
+                      onLocationSelect(address, latitude, longitude);
+                    }
+                  })
+                  .catch(() => {
+                    // Geocoding failed; still report the coordinates.
+                    onLocationSelect(initialLocation, latitude, longitude);
+                  });
+              },
+              () => {
+                // Permission denied or unavailable: keep the default center.
+              },
+              { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+            );
+          }
         } catch {
           // Error initializing map
           setError('Ошибка инициализации карты');
