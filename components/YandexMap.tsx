@@ -230,7 +230,8 @@ const YandexMap: React.FC<YandexMapProps> = ({
             onChange={setSearchQuery}
             onSelect={handleSuggestSelect}
             placeholder="Введите адрес или нажмите на карту"
-            className="flex-1 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            wrapperClassName="relative flex-1"
+            className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <button
             type="submit"

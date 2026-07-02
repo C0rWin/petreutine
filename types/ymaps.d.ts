@@ -70,27 +70,9 @@ declare namespace ymaps {
     };
   }
 
-  interface ISuggestItem {
-    value: string;
-    displayName: string;
-    type: string;
-  }
-
-  class SuggestView {
-    constructor(
-      parentElement: HTMLElement | string,
-      options?: {
-        results?: number;
-        boundedBy?: [[number, number], [number, number]];
-        offset?: [number, number];
-      }
-    );
-    events: {
-      add(type: string, callback: (e: IEvent) => void): void;
-    };
-    destroy(): void;
-  }
-
   function ready(callback: () => void): void;
-  function geocode(request: string | [number, number]): Promise<IGeocodeResult>;
+  function geocode(
+    request: string | [number, number],
+    options?: { results?: number; boundedBy?: [[number, number], [number, number]] }
+  ): Promise<IGeocodeResult>;
 }
