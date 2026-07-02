@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://petreunite.info/sitemap.xml
+Host: https://petreunite.info
