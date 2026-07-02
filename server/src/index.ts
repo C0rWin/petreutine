@@ -12,7 +12,6 @@ import {
   authLimiter,
   httpsRedirect,
   requestLogger,
-  sanitizeInput,
   securityHeaders,
 } from './middleware/security.js';
 import adminRouter from './routes/admin/index.js';
@@ -77,8 +76,10 @@ app.use('/upload', largeBodyParser);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Input sanitization
-app.use(sanitizeInput);
+// NOTE: global input HTML-encoding was removed. It corrupted stored data by
+// entity-encoding every string in the body (e.g. image URLs became
+// https:&#x2F;&#x2F;... and would not load). SQL injection is prevented by
+// parameterized queries and output XSS by React's JSX escaping.
 
 // Health check endpoint (no rate limiting)
 app.get('/health', (_req, res) => {
