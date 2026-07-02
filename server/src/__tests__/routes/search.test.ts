@@ -93,7 +93,7 @@ describe('Search Routes', () => {
       await executeHandler('get', '/', mockReq as any, mockRes, mockNext);
 
       expect(mockQueryFn).toHaveBeenCalledWith(
-        expect.stringContaining('AND p.type ='),
+        expect.stringContaining('p.type ='),
         expect.arrayContaining([PostType.LOST])
       );
     });
@@ -107,7 +107,7 @@ describe('Search Routes', () => {
       await executeHandler('get', '/', mockReq as any, mockRes, mockNext);
 
       expect(mockQueryFn).toHaveBeenCalledWith(
-        expect.stringContaining('AND p.animal_type ='),
+        expect.stringContaining('p.animal_type ='),
         expect.arrayContaining([AnimalType.CAT])
       );
     });
@@ -135,9 +135,53 @@ describe('Search Routes', () => {
       await executeHandler('get', '/', mockReq as any, mockRes, mockNext);
 
       expect(mockQueryFn).toHaveBeenCalledWith(
-        expect.stringContaining('AND p.status ='),
+        expect.stringContaining('p.status ='),
         expect.arrayContaining([PostStatus.OPEN])
       );
+    });
+
+    it('should filter by date range (created_at)', async () => {
+      mockQueryFn
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+        .mockResolvedValueOnce({ rows: [{ total: '0' }], rowCount: 1 });
+
+      const from = '2026-06-01T00:00:00.000Z';
+      const to = '2026-07-01T00:00:00.000Z';
+      mockReq.query = { date_from: from, date_to: to };
+      await executeHandler('get', '/', mockReq as any, mockRes, mockNext);
+
+      const [sql, params] = mockQueryFn.mock.calls[0];
+      expect(sql).toContain('p.created_at >=');
+      expect(sql).toContain('p.created_at <=');
+      // Zod coerces the ISO strings to Date objects.
+      expect((params as unknown[]).some(p => p instanceof Date)).toBe(true);
+    });
+
+    it('should filter by geo radius when lat/lon/radius are provided', async () => {
+      mockQueryFn
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+        .mockResolvedValueOnce({ rows: [{ total: '0' }], rowCount: 1 });
+
+      mockReq.query = { lat: '55.75', lon: '37.61', radius_km: '10' };
+      await executeHandler('get', '/', mockReq as any, mockRes, mockNext);
+
+      const [sql, params] = mockQueryFn.mock.calls[0];
+      expect(sql).toContain('acos');
+      expect(sql).toContain('p.latitude IS NOT NULL');
+      expect(params as unknown[]).toEqual(expect.arrayContaining([55.75, 37.61, 10]));
+    });
+
+    it('should ignore geo radius and use text location when radius is missing', async () => {
+      mockQueryFn
+        .mockResolvedValueOnce({ rows: [], rowCount: 0 })
+        .mockResolvedValueOnce({ rows: [{ total: '0' }], rowCount: 1 });
+
+      mockReq.query = { lat: '55.75', lon: '37.61', location: 'Moscow' };
+      await executeHandler('get', '/', mockReq as any, mockRes, mockNext);
+
+      const [sql] = mockQueryFn.mock.calls[0];
+      expect(sql).not.toContain('acos');
+      expect(sql).toContain("p.location ILIKE '%'");
     });
 
     it('should apply pagination', async () => {
@@ -170,7 +214,7 @@ describe('Search Routes', () => {
       await executeHandler('get', '/', mockReq as any, mockRes, mockNext);
 
       expect(mockQueryFn).toHaveBeenCalledWith(
-        expect.stringContaining('AND p.type ='),
+        expect.stringContaining('p.type ='),
         expect.arrayContaining(['cat', PostType.FOUND, AnimalType.CAT, PostStatus.OPEN])
       );
     });

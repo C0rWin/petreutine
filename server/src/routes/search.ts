@@ -9,9 +9,105 @@ const router = Router();
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const params = searchQuerySchema.parse(req.query);
-    const { q, type, animal_type, location, status, limit, offset } = params;
+    const {
+      q,
+      type,
+      animal_type,
+      location,
+      status,
+      date_from,
+      date_to,
+      lat,
+      lon,
+      radius_km,
+      limit,
+      offset,
+    } = params;
 
-    let queryText = `
+    const hasQuery = Boolean(q && q.trim());
+    // Geo radius applies only when a point + radius are all present.
+    const hasGeo = lat !== undefined && lon !== undefined && radius_km !== undefined;
+
+    // Build the shared WHERE clause once so the main and count queries stay in sync.
+    const conditions: string[] = [];
+    const queryParams: unknown[] = [];
+    let i = 1;
+
+    // The full-text query is always param $1 when present (relevance reuses it).
+    if (hasQuery) {
+      queryParams.push(q);
+      conditions.push(`(
+        p.search_vector @@ plainto_tsquery('russian', $${i})
+        OR p.title ILIKE '%' || $${i} || '%'
+        OR p.description ILIKE '%' || $${i} || '%'
+        OR p.location ILIKE '%' || $${i} || '%'
+        OR similarity(p.title, $${i}) > 0.1
+        OR similarity(p.description, $${i}) > 0.1
+      )`);
+      i++;
+    }
+
+    if (type) {
+      queryParams.push(type);
+      conditions.push(`p.type = $${i++}`);
+    }
+
+    if (animal_type) {
+      queryParams.push(animal_type);
+      conditions.push(`p.animal_type = $${i++}`);
+    }
+
+    if (hasGeo) {
+      // Great-circle (Haversine) distance in km; LEAST guards acos() rounding.
+      const latIdx = i++;
+      const lonIdx = i++;
+      const radIdx = i++;
+      queryParams.push(lat, lon, radius_km);
+      conditions.push(`p.latitude IS NOT NULL AND p.longitude IS NOT NULL AND (
+        6371 * acos(LEAST(1, GREATEST(-1,
+          cos(radians($${latIdx})) * cos(radians(p.latitude)) *
+          cos(radians(p.longitude) - radians($${lonIdx})) +
+          sin(radians($${latIdx})) * sin(radians(p.latitude))
+        )))
+      ) <= $${radIdx}`);
+    } else if (location) {
+      queryParams.push(location);
+      conditions.push(
+        `(p.location ILIKE '%' || $${i} || '%' OR similarity(p.location, $${i}) > 0.2)`
+      );
+      i++;
+    }
+
+    if (status) {
+      queryParams.push(status);
+      conditions.push(`p.status = $${i++}`);
+    }
+
+    if (date_from) {
+      queryParams.push(date_from);
+      conditions.push(`p.created_at >= $${i++}`);
+    }
+
+    if (date_to) {
+      queryParams.push(date_to);
+      conditions.push(`p.created_at <= $${i++}`);
+    }
+
+    const whereSql = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const relevanceSelect = hasQuery
+      ? `,
+        ts_rank(p.search_vector, plainto_tsquery('russian', $1)) +
+        similarity(p.title, $1) * 0.5 +
+        similarity(p.description, $1) * 0.3 +
+        similarity(p.location, $1) * 0.2 as relevance`
+      : '';
+
+    const orderBy = hasQuery
+      ? `ORDER BY relevance DESC, p.created_at DESC`
+      : `ORDER BY p.created_at DESC`;
+
+    const queryText = `
       SELECT
         p.*,
         json_build_object(
@@ -21,122 +117,24 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
           'avatar_url', u.avatar_url,
           'yandex_id', u.yandex_id,
           'created_at', u.created_at
-        ) as user
-    `;
-
-    // Add relevance score if search query provided
-    if (q && q.trim()) {
-      queryText += `,
-        ts_rank(p.search_vector, plainto_tsquery('russian', $1)) +
-        similarity(p.title, $1) * 0.5 +
-        similarity(p.description, $1) * 0.3 +
-        similarity(p.location, $1) * 0.2 as relevance
-      `;
-    }
-
-    queryText += `
+        ) as user${relevanceSelect}
       FROM posts p
       JOIN users u ON p.user_id = u.id
-      WHERE 1=1
+      ${whereSql}
+      ${orderBy}
+      LIMIT $${i++} OFFSET $${i++}
     `;
 
-    const queryParams: unknown[] = [];
-    let paramIndex = 1;
+    const result = await query<PetPostWithUser & { relevance?: number }>(queryText, [
+      ...queryParams,
+      limit,
+      offset,
+    ]);
 
-    // Full-text search condition
-    if (q && q.trim()) {
-      queryParams.push(q);
-      queryText += `
-        AND (
-          p.search_vector @@ plainto_tsquery('russian', $${paramIndex})
-          OR p.title ILIKE '%' || $${paramIndex} || '%'
-          OR p.description ILIKE '%' || $${paramIndex} || '%'
-          OR p.location ILIKE '%' || $${paramIndex} || '%'
-          OR similarity(p.title, $${paramIndex}) > 0.1
-          OR similarity(p.description, $${paramIndex}) > 0.1
-        )
-      `;
-      paramIndex++;
-    }
-
-    // Additional filters
-    if (type) {
-      queryParams.push(type);
-      queryText += ` AND p.type = $${paramIndex++}`;
-    }
-
-    if (animal_type) {
-      queryParams.push(animal_type);
-      queryText += ` AND p.animal_type = $${paramIndex++}`;
-    }
-
-    if (location) {
-      queryParams.push(location);
-      queryText += ` AND (p.location ILIKE '%' || $${paramIndex} || '%' OR similarity(p.location, $${paramIndex++}) > 0.2)`;
-    }
-
-    if (status) {
-      queryParams.push(status);
-      queryText += ` AND p.status = $${paramIndex++}`;
-    }
-
-    // Order by relevance if searching, otherwise by date
-    if (q && q.trim()) {
-      queryText += ` ORDER BY relevance DESC, p.created_at DESC`;
-    } else {
-      queryText += ` ORDER BY p.created_at DESC`;
-    }
-
-    queryParams.push(limit, offset);
-    queryText += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-
-    const result = await query<PetPostWithUser & { relevance?: number }>(queryText, queryParams);
-
-    // Get total count for pagination
-    let countQuery = `
-      SELECT COUNT(*) as total
-      FROM posts p
-      WHERE 1=1
-    `;
-    const countParams: unknown[] = [];
-    let countParamIndex = 1;
-
-    if (q && q.trim()) {
-      countParams.push(q);
-      countQuery += `
-        AND (
-          p.search_vector @@ plainto_tsquery('russian', $${countParamIndex})
-          OR p.title ILIKE '%' || $${countParamIndex} || '%'
-          OR p.description ILIKE '%' || $${countParamIndex} || '%'
-          OR p.location ILIKE '%' || $${countParamIndex} || '%'
-          OR similarity(p.title, $${countParamIndex}) > 0.1
-          OR similarity(p.description, $${countParamIndex}) > 0.1
-        )
-      `;
-      countParamIndex++;
-    }
-
-    if (type) {
-      countParams.push(type);
-      countQuery += ` AND p.type = $${countParamIndex++}`;
-    }
-
-    if (animal_type) {
-      countParams.push(animal_type);
-      countQuery += ` AND p.animal_type = $${countParamIndex++}`;
-    }
-
-    if (location) {
-      countParams.push(location);
-      countQuery += ` AND (p.location ILIKE '%' || $${countParamIndex} || '%' OR similarity(p.location, $${countParamIndex++}) > 0.2)`;
-    }
-
-    if (status) {
-      countParams.push(status);
-      countQuery += ` AND p.status = $${countParamIndex++}`;
-    }
-
-    const countResult = await query<{ total: string }>(countQuery, countParams);
+    const countResult = await query<{ total: string }>(
+      `SELECT COUNT(*) as total FROM posts p ${whereSql}`,
+      queryParams
+    );
 
     res.json({
       posts: result.rows,

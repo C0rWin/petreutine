@@ -191,6 +191,11 @@ class ApiService {
       animal_type?: AnimalType;
       location?: string;
       status?: 'OPEN' | 'RESOLVED';
+      date_from?: string;
+      date_to?: string;
+      lat?: number;
+      lon?: number;
+      radius_km?: number;
       limit?: number;
       offset?: number;
     }
@@ -201,6 +206,11 @@ class ApiService {
     if (filters?.animal_type) params.set('animal_type', filters.animal_type);
     if (filters?.location) params.set('location', filters.location);
     if (filters?.status) params.set('status', filters.status);
+    if (filters?.date_from) params.set('date_from', filters.date_from);
+    if (filters?.date_to) params.set('date_to', filters.date_to);
+    if (filters?.lat !== undefined) params.set('lat', filters.lat.toString());
+    if (filters?.lon !== undefined) params.set('lon', filters.lon.toString());
+    if (filters?.radius_km !== undefined) params.set('radius_km', filters.radius_km.toString());
     if (filters?.limit) params.set('limit', filters.limit.toString());
     if (filters?.offset) params.set('offset', filters.offset.toString());
 

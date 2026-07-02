@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
-import AddressAutocomplete from './components/AddressAutocomplete';
 import { CommentSection } from './components/comments';
 import CreatePost from './components/CreatePost';
 import EditPost from './components/EditPost';
+import Filters, { countActiveFilters, DEFAULT_FILTERS, FilterState } from './components/Filters';
 import LocationMap from './components/LocationMap';
 import MatchCard from './components/MatchCard';
 import MyPosts from './components/MyPosts';
@@ -34,65 +34,90 @@ const AppContent: React.FC = () => {
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [isMyPostsOpen, setIsMyPostsOpen] = useState(false);
 
-  // Load posts from API
-  const loadPosts = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await api.getPosts();
-      if (response.error) {
-        setError(response.error);
-        return;
-      }
-      const normalizedPosts = (response.data?.posts || []).map(normalizePost);
-      setPosts(normalizedPosts);
-    } catch {
-      setError('Не удалось загрузить объявления');
-      // Error logged to state
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  // Filters
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
+  const activeFilterCount = countActiveFilters(filters);
 
-  // Init - load posts
-  useEffect(() => {
-    loadPosts();
-  }, [loadPosts]);
-
-  const runSearch = async (query: string) => {
-    if (!query.trim()) {
-      loadPosts();
-      return;
-    }
-
+  // Apply keyword + all filters (type, animal, location/geo, date, status) via the
+  // search endpoint. Used for the initial load and every filter change.
+  const applyFilters = useCallback(async () => {
     setIsSearching(true);
     setError(null);
     try {
-      const response = await api.search(query, {
+      const now = Date.now();
+      const day = 24 * 60 * 60 * 1000;
+      let date_from: string | undefined;
+      let date_to: string | undefined;
+      switch (filters.datePreset) {
+        case '24h':
+          date_from = new Date(now - day).toISOString();
+          break;
+        case 'week':
+          date_from = new Date(now - 7 * day).toISOString();
+          break;
+        case '2weeks':
+          date_from = new Date(now - 14 * day).toISOString();
+          break;
+        case 'month':
+          date_from = new Date(now - 30 * day).toISOString();
+          break;
+        case 'custom':
+          if (filters.customDate) {
+            date_from = new Date(`${filters.customDate}T00:00:00`).toISOString();
+            date_to = new Date(`${filters.customDate}T23:59:59.999`).toISOString();
+          }
+          break;
+        default:
+          break;
+      }
+
+      const useGeo =
+        filters.lat !== undefined && filters.lon !== undefined && filters.radiusKm !== 'ANY';
+
+      const response = await api.search(searchQuery, {
         type: activeTab === 'ALL' ? undefined : activeTab,
+        animal_type: filters.animalType === 'ALL' ? undefined : filters.animalType,
+        location: useGeo ? undefined : filters.location.trim() || undefined,
+        lat: useGeo ? filters.lat : undefined,
+        lon: useGeo ? filters.lon : undefined,
+        radius_km: useGeo ? (filters.radiusKm as number) : undefined,
+        status: filters.status === 'ALL' ? undefined : filters.status,
+        date_from,
+        date_to,
       });
       if (response.error) {
         setError(response.error);
         return;
       }
-      const normalizedPosts = (response.data?.posts || []).map(normalizePost);
-      setPosts(normalizedPosts);
+      setPosts((response.data?.posts || []).map(normalizePost));
     } catch {
-      setError('Ошибка поиска');
-      // Error logged to state
+      setError('Не удалось загрузить объявления');
     } finally {
       setIsSearching(false);
+      setIsLoading(false);
     }
-  };
+  }, [searchQuery, activeTab, filters]);
 
-  const handleSearch = async (e: React.FormEvent) => {
+  // Re-run whenever the keyword or any filter changes (debounced).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      applyFilters();
+    }, 300);
+    return () => clearTimeout(t);
+  }, [applyFilters]);
+
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    runSearch(searchQuery);
+    applyFilters();
   };
 
   const clearSearch = () => {
     setSearchQuery('');
-    loadPosts();
+  };
+
+  const resetFilters = () => {
+    setFilters(DEFAULT_FILTERS);
   };
 
   const loadMatches = async (postId: string) => {
@@ -328,46 +353,77 @@ const AppContent: React.FC = () => {
             ))}
           </div>
 
-          {/* Search */}
-          <form onSubmit={handleSearch} className="relative w-full sm:w-96">
-            <AddressAutocomplete
-              className="w-full pl-11 pr-10 py-3 rounded-2xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-transparent transition-all shadow-sm hover:shadow-md"
-              placeholder="Поиск по породе, цвету, местоположению..."
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onSelect={address => {
-                setSearchQuery(address);
-                runSearch(address);
-              }}
-            />
-            <div className="absolute left-4 top-3.5 text-gray-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="absolute right-3 top-3.5 text-gray-400 hover:text-coral-500 transition-colors"
-              >
+          {/* Search + Filters toggle */}
+          <div className="flex gap-2 w-full sm:w-auto">
+            <form onSubmit={handleSearch} className="relative flex-1 sm:w-80">
+              <input
+                type="text"
+                className="w-full pl-11 pr-10 py-3 rounded-2xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-transparent transition-all shadow-sm hover:shadow-md"
+                placeholder="Поиск по кличке, породе, цвету..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+              <div className="absolute left-4 top-3.5 text-gray-400">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
-              </button>
-            )}
-          </form>
+              </div>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="absolute right-3 top-3.5 text-gray-400 hover:text-coral-500 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
+            </form>
+            <button
+              type="button"
+              onClick={() => setShowFilters(v => !v)}
+              aria-label="Фильтры"
+              className={`relative flex items-center gap-2 px-4 py-3 rounded-2xl border font-medium transition-all shadow-sm ${
+                showFilters || activeFilterCount > 0
+                  ? 'bg-coral-50 border-coral-200 text-coral-600'
+                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586L3.293 6.707A1 1 0 013 6V4z"
+                />
+              </svg>
+              <span className="hidden sm:inline">Фильтры</span>
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-coral-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
+
+        {/* Filters panel */}
+        {showFilters && (
+          <div className="mb-8">
+            <Filters value={filters} onChange={setFilters} onReset={resetFilters} />
+          </div>
+        )}
 
         {/* Results Grid */}
         {isLoading || isSearching ? (
@@ -500,7 +556,7 @@ const AppContent: React.FC = () => {
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={() => {
             setIsCreateModalOpen(false);
-            loadPosts();
+            applyFilters();
           }}
         />
       )}

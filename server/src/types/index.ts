@@ -72,6 +72,13 @@ export const searchQuerySchema = z.object({
   animal_type: z.nativeEnum(AnimalType).optional(),
   location: z.string().max(200).optional(),
   status: z.nativeEnum(PostStatus).optional(),
+  // Date range (ISO strings coerced to Date; compared against created_at)
+  date_from: z.coerce.date().optional(),
+  date_to: z.coerce.date().optional(),
+  // Geo radius filter around a point (km). All three required together.
+  lat: z.coerce.number().min(-90).max(90).optional(),
+  lon: z.coerce.number().min(-180).max(180).optional(),
+  radius_km: z.coerce.number().min(0.1).max(500).optional(),
   limit: z.coerce.number().min(1).max(100).default(20),
   offset: z.coerce.number().min(0).default(0),
 });

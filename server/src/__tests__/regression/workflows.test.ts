@@ -391,7 +391,7 @@ describe('Workflow Regression Tests', () => {
       await executeSearchHandler('get', '/', mockReq as any, mockRes, mockNext);
 
       expect(mockQueryFn).toHaveBeenCalledWith(
-        expect.stringContaining('AND p.type ='),
+        expect.stringContaining('p.type ='),
         expect.arrayContaining([PostType.LOST])
       );
       expect(mockRes.json).toHaveBeenCalledWith(
@@ -412,7 +412,7 @@ describe('Workflow Regression Tests', () => {
       await executeSearchHandler('get', '/', mockReq as any, mockRes, mockNext);
 
       expect(mockQueryFn).toHaveBeenCalledWith(
-        expect.stringContaining('AND p.animal_type ='),
+        expect.stringContaining('p.animal_type ='),
         expect.arrayContaining([AnimalType.DOG])
       );
       expect(mockRes.json).toHaveBeenCalledWith(
@@ -466,7 +466,7 @@ describe('Workflow Regression Tests', () => {
 
       // Verify all filters are applied
       expect(mockQueryFn).toHaveBeenCalledWith(
-        expect.stringContaining('AND p.type ='),
+        expect.stringContaining('p.type ='),
         expect.arrayContaining([PostType.LOST, AnimalType.DOG, PostStatus.OPEN])
       );
       expect(mockRes.json).toHaveBeenCalledWith(
