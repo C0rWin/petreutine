@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import { api } from '../services/api';
 import { AnimalType, PetPost, PostType } from '../types';
+import AddressAutocomplete from './AddressAutocomplete';
 import YandexMap from './YandexMap';
 
 interface EditPostProps {
@@ -279,11 +280,17 @@ const EditPost: React.FC<EditPostProps> = ({ post, onClose, onSuccess }) => {
                   initialLongitude={formData.longitude}
                 />
               ) : (
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
+                <AddressAutocomplete
+                  value={formData.location || ''}
+                  onChange={value => setFormData(prev => ({ ...prev, location: value }))}
+                  onSelect={(address, lat, lon) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      location: address,
+                      latitude: lat,
+                      longitude: lon,
+                    }))
+                  }
                   className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />

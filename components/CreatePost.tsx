@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import { api } from '../services/api';
 import { AnimalType, PetPost, PostType } from '../types';
+import AddressAutocomplete from './AddressAutocomplete';
 import YandexMap from './YandexMap';
 
 interface CreatePostProps {
@@ -288,12 +289,18 @@ const CreatePost: React.FC<CreatePostProps> = ({ onClose, onSuccess }) => {
                   initialLongitude={formData.longitude}
                 />
               ) : (
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  placeholder="Город, район или адрес"
+                <AddressAutocomplete
+                  value={formData.location || ''}
+                  onChange={value => setFormData(prev => ({ ...prev, location: value }))}
+                  onSelect={(address, lat, lon) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      location: address,
+                      latitude: lat,
+                      longitude: lon,
+                    }))
+                  }
+                  placeholder="Начните вводить город, район или адрес"
                   className="w-full border border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-coral-500 focus:border-transparent transition-all"
                   required
                 />

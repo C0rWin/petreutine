@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 
+import AddressAutocomplete from './components/AddressAutocomplete';
 import { CommentSection } from './components/comments';
 import CreatePost from './components/CreatePost';
 import EditPost from './components/EditPost';
@@ -58,9 +59,8 @@ const AppContent: React.FC = () => {
     loadPosts();
   }, [loadPosts]);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
+  const runSearch = async (query: string) => {
+    if (!query.trim()) {
       loadPosts();
       return;
     }
@@ -68,7 +68,7 @@ const AppContent: React.FC = () => {
     setIsSearching(true);
     setError(null);
     try {
-      const response = await api.search(searchQuery, {
+      const response = await api.search(query, {
         type: activeTab === 'ALL' ? undefined : activeTab,
       });
       if (response.error) {
@@ -83,6 +83,11 @@ const AppContent: React.FC = () => {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    runSearch(searchQuery);
   };
 
   const clearSearch = () => {
@@ -325,12 +330,15 @@ const AppContent: React.FC = () => {
 
           {/* Search */}
           <form onSubmit={handleSearch} className="relative w-full sm:w-96">
-            <input
-              type="text"
+            <AddressAutocomplete
               className="w-full pl-11 pr-10 py-3 rounded-2xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-transparent transition-all shadow-sm hover:shadow-md"
               placeholder="Поиск по породе, цвету, местоположению..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={setSearchQuery}
+              onSelect={address => {
+                setSearchQuery(address);
+                runSearch(address);
+              }}
             />
             <div className="absolute left-4 top-3.5 text-gray-400">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

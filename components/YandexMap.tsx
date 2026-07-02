@@ -1,43 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+import { loadYandexMapsScript } from '../services/yandexMaps';
+import AddressAutocomplete from './AddressAutocomplete';
+
 declare global {
   interface Window {
     ymaps: typeof ymaps;
   }
-}
-
-const YANDEX_MAPS_API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY || '';
-
-// Track script loading state globally to avoid duplicate loads
-let ymapsLoadPromise: Promise<void> | null = null;
-
-function loadYandexMapsScript(): Promise<void> {
-  if (ymapsLoadPromise) {
-    return ymapsLoadPromise;
-  }
-
-  if (window.ymaps) {
-    return Promise.resolve();
-  }
-
-  ymapsLoadPromise = new Promise((resolve, reject) => {
-    if (!YANDEX_MAPS_API_KEY) {
-      reject(new Error('Yandex Maps API ключ не настроен'));
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `https://api-maps.yandex.ru/2.1/?apikey=${YANDEX_MAPS_API_KEY}&lang=ru_RU`;
-    script.async = true;
-    script.onload = () => {
-      // Wait for ymaps to be ready
-      window.ymaps.ready(() => resolve());
-    };
-    script.onerror = () => reject(new Error('Не удалось загрузить Yandex Maps API'));
-    document.head.appendChild(script);
-  });
-
-  return ymapsLoadPromise;
 }
 
 interface YandexMapProps {
@@ -231,6 +200,19 @@ const YandexMap: React.FC<YandexMapProps> = ({
     );
   };
 
+  // A suggestion was picked in the autocomplete: recenter the map and marker.
+  const handleSuggestSelect = (address: string, lat: number, lon: number) => {
+    setSearchQuery(address);
+    if (placemark) {
+      placemark.geometry?.setCoordinates([lat, lon]);
+      placemark.properties?.set('balloonContent', address);
+    }
+    if (map) {
+      map.setCenter([lat, lon], 16);
+    }
+    onLocationSelect(address, lat, lon);
+  };
+
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm">
@@ -243,10 +225,10 @@ const YandexMap: React.FC<YandexMapProps> = ({
     <div className="space-y-3">
       <div className="flex gap-2">
         <form onSubmit={handleSearch} className="flex-1 flex gap-2">
-          <input
-            type="text"
+          <AddressAutocomplete
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={setSearchQuery}
+            onSelect={handleSuggestSelect}
             placeholder="Введите адрес или нажмите на карту"
             className="flex-1 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
