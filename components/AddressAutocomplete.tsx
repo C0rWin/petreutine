@@ -100,6 +100,8 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         value={value}
         onChange={e => handleInput(e.target.value)}
         onFocus={() => {
+          // Warm up the maps script so the first suggestion isn't slow.
+          loadYandexMapsScript().catch(() => {});
           if (suggestions.length > 0) setOpen(true);
         }}
         onBlur={() => {
