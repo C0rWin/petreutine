@@ -7,6 +7,7 @@ import {
   BanHistoryEntry,
   BanType,
   CommentStats,
+  FeedbackResponse,
   OverviewStats,
   PaginatedResponse,
   PostStats,
@@ -221,6 +222,28 @@ class AdminApi {
       if (value !== undefined) query.set(key, String(value));
     });
     return this.request(`/audit-log?${query}`);
+  }
+
+  // ============================================
+  // FEEDBACK
+  // ============================================
+
+  async getFeedback(
+    params: { limit?: number; offset?: number } = {}
+  ): Promise<ApiResponse<FeedbackResponse>> {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) query.set(key, String(value));
+    });
+    return this.request(`/feedback?${query}`);
+  }
+
+  async markFeedbackRead(id: string): Promise<ApiResponse<{ success: boolean }>> {
+    return this.request(`/feedback/${id}/read`, { method: 'PATCH' });
+  }
+
+  async deleteFeedback(id: string): Promise<ApiResponse<{ success: boolean }>> {
+    return this.request(`/feedback/${id}`, { method: 'DELETE' });
   }
 }
 

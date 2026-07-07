@@ -17,6 +17,7 @@ import {
 import adminRouter from './routes/admin/index.js';
 import authRouter from './routes/auth.js';
 import commentsRouter from './routes/comments.js';
+import feedbackRouter from './routes/feedback.js';
 import moderationRouter from './routes/moderation.js';
 import notificationsRouter from './routes/notifications.js';
 import postsRouter from './routes/posts.js';
@@ -207,6 +208,8 @@ app.use('/api/upload', uploadRouter);
 app.use('/upload', uploadRouter);
 app.use('/api/comments', commentsRouter);
 app.use('/comments', commentsRouter);
+app.use('/api/feedback', feedbackRouter);
+app.use('/feedback', feedbackRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/api/moderation', moderationRouter);

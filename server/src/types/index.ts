@@ -83,6 +83,13 @@ export const searchQuerySchema = z.object({
   offset: z.coerce.number().min(0).default(0),
 });
 
+export const feedbackSchema = z.object({
+  name: z.string().max(120).optional(),
+  email: z.union([z.string().email().max(255), z.literal('')]).optional(),
+  message: z.string().min(5).max(5000),
+});
+
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 export type UpdatePostInput = z.infer<typeof updatePostSchema>;
 export type SearchQuery = z.infer<typeof searchQuerySchema>;
+export type FeedbackInput = z.infer<typeof feedbackSchema>;

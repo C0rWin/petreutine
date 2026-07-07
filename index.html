@@ -12,7 +12,7 @@
     <meta name="theme-color" content="#ff6b6b" />
     <meta
       name="description"
-      content="ДомойСкорей — бесплатный сервис для поиска пропавших и найденных домашних животных. Публикуйте объявления о потерянных и найденных питомцах, ищите совпадения по описанию, породе, цвету и местоположению."
+      content="Бесплатная помощь в поиске пропавших собак и кошек. Разместите объявление о пропаже или найденном животном, и мы поможем найти питомца по описанию и местоположению."
     />
     <meta
       name="keywords"
@@ -28,21 +28,21 @@
     <meta property="og:site_name" content="ДомойСкорей" />
     <meta property="og:locale" content="ru_RU" />
     <meta property="og:url" content="https://petreunite.info/" />
-    <meta property="og:title" content="ДомойСкорей — поиск пропавших и найденных питомцев" />
+    <meta property="og:title" content="Потерялась собака или кошка? Поможем найти питомца" />
     <meta
       property="og:description"
-      content="Бесплатный сервис для поиска пропавших и найденных домашних животных. Публикуйте объявления и находите совпадения."
+      content="Бесплатная помощь в поиске пропавших собак и кошек. Разместите объявление о пропаже или найденном животном."
     />
 
     <!-- Twitter card -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="ДомойСкорей — поиск пропавших и найденных питомцев" />
+    <meta name="twitter:title" content="Потерялась собака или кошка? Поможем найти питомца" />
     <meta
       name="twitter:description"
-      content="Бесплатный сервис для поиска пропавших и найденных домашних животных."
+      content="Бесплатная помощь в поиске пропавших собак и кошек. Разместите объявление о пропаже или найденном животном."
     />
 
-    <title>ДомойСкорей - Найдите своего питомца</title>
+    <title>Потерялась собака или кошка? Поможем найти питомца</title>
 
     <!-- Structured data for search engines -->
     <script type="application/ld+json">
@@ -54,6 +54,46 @@
         "url": "https://petreunite.info/",
         "description": "Сервис для поиска пропавших и найденных домашних животных",
         "inLanguage": "ru-RU"
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Как разместить объявление о пропаже собаки или кошки?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Войдите через Яндекс ID, нажмите «Разместить объявление», выберите «Пропал питомец», добавьте фото, описание и место, где потерялась собака или кошка. Объявление появится на сайте сразу и бесплатно."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Как сообщить, что найдена собака или кошка?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Создайте объявление и выберите «Найден питомец». Опишите животное и место находки — сервис автоматически подберёт совпадения с объявлениями о пропаже, чтобы быстрее найти владельца."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Сколько стоит размещение объявления?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Бесплатно. Все объявления о поиске пропавших и найденных животных публикуются без оплаты."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Как со мной свяжутся, если найдут питомца?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "В объявлении указываются ваши контакты. Пользователь, который найдёт собаку или кошку, напишет или позвонит вам напрямую."
+            }
+          }
+        ]
       }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -203,5 +243,150 @@
 
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+
+    <!-- SEO content + FAQ + contact form (static, crawlable) -->
+    <footer class="border-t border-gray-200 bg-white/80 backdrop-blur">
+      <div class="max-w-5xl mx-auto px-4 py-12 space-y-10 text-gray-600">
+        <section>
+          <p class="text-lg text-gray-800 font-semibold">
+            Если потерялась собака, кошка или другое животное — мы поможем найти питомца в вашем
+            городе.
+          </p>
+          <p class="mt-3 leading-relaxed">
+            ДомойСкорей — бесплатный сервис для тех, у кого <strong>потерялась собака</strong> или
+            кошка. Разместите <strong>объявление</strong> о пропаже, и мы поможем
+            <strong>найти собаку</strong> или <strong>кошку</strong> по описанию, породе, цвету и
+            месту пропажи. Если вы подобрали животное на улице, опубликуйте объявление
+            «<strong>найдена собака</strong>» или «найдена <strong>кошка</strong>» — так владелец
+            быстрее найдёт своего питомца. Каждое объявление помогает воссоединить хозяев с
+            любимцами.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-xl font-bold text-gray-800 mb-4">Частые вопросы</h2>
+          <div class="space-y-3">
+            <details class="border border-gray-200 rounded-xl p-4">
+              <summary class="cursor-pointer font-medium text-gray-800">
+                Как разместить объявление о пропаже?
+              </summary>
+              <p class="mt-2 leading-relaxed">
+                Войдите через Яндекс ID, нажмите «Разместить объявление», выберите «Пропал питомец»,
+                добавьте фото, описание и место, где потерялась собака или кошка. Объявление появится
+                на сайте сразу и бесплатно.
+              </p>
+            </details>
+            <details class="border border-gray-200 rounded-xl p-4">
+              <summary class="cursor-pointer font-medium text-gray-800">
+                Как сообщить, что найдена собака или кошка?
+              </summary>
+              <p class="mt-2 leading-relaxed">
+                Создайте объявление и выберите «Найден питомец». Опишите животное и место находки —
+                сервис подберёт совпадения с объявлениями о пропаже, чтобы быстрее найти владельца.
+              </p>
+            </details>
+            <details class="border border-gray-200 rounded-xl p-4">
+              <summary class="cursor-pointer font-medium text-gray-800">
+                Сколько стоит размещение?
+              </summary>
+              <p class="mt-2 leading-relaxed">
+                Бесплатно. Все объявления о поиске пропавших и найденных животных публикуются без
+                оплаты.
+              </p>
+            </details>
+            <details class="border border-gray-200 rounded-xl p-4">
+              <summary class="cursor-pointer font-medium text-gray-800">
+                Как со мной свяжутся?
+              </summary>
+              <p class="mt-2 leading-relaxed">
+                В объявлении указываются ваши контакты. Пользователь, который найдёт собаку или кошку,
+                напишет или позвонит вам напрямую.
+              </p>
+            </details>
+          </div>
+        </section>
+
+        <section id="feedback">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">Обратная связь</h2>
+          <p class="mb-4">Есть вопрос или предложение? Напишите нам — мы ответим.</p>
+          <form id="feedback-form" class="grid gap-3 sm:grid-cols-2 max-w-2xl">
+            <input
+              name="name"
+              type="text"
+              maxlength="120"
+              placeholder="Имя (необязательно)"
+              class="border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-coral-500 focus:border-transparent"
+            />
+            <input
+              name="email"
+              type="email"
+              maxlength="255"
+              placeholder="Email для ответа (необязательно)"
+              class="border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-coral-500 focus:border-transparent"
+            />
+            <textarea
+              name="message"
+              required
+              minlength="5"
+              maxlength="5000"
+              rows="4"
+              placeholder="Ваше сообщение"
+              class="sm:col-span-2 border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-coral-500 focus:border-transparent resize-none"
+            ></textarea>
+            <div class="sm:col-span-2 flex items-center gap-3">
+              <button
+                type="submit"
+                class="px-6 py-3 bg-coral-500 text-white rounded-xl font-medium hover:bg-coral-600 transition-colors"
+              >
+                Отправить
+              </button>
+              <span id="feedback-status" class="text-sm text-gray-500" role="status"></span>
+            </div>
+          </form>
+        </section>
+
+        <p class="text-xs text-gray-400 pt-4 border-t border-gray-100">
+          © ДомойСкорей — сервис поиска пропавших и найденных домашних животных.
+        </p>
+      </div>
+    </footer>
+    <script>
+      (function () {
+        var form = document.getElementById('feedback-form');
+        if (!form) return;
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var status = document.getElementById('feedback-status');
+          var payload = {
+            name: form.querySelector('[name="name"]').value,
+            email: form.querySelector('[name="email"]').value,
+            message: form.querySelector('[name="message"]').value,
+          };
+          status.textContent = 'Отправка…';
+          fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+            .then(function (r) {
+              return r.json().then(function (j) {
+                return { ok: r.ok, j: j };
+              });
+            })
+            .then(function (res) {
+              if (res.ok) {
+                form.reset();
+                status.textContent = 'Спасибо! Сообщение отправлено.';
+              } else {
+                status.textContent =
+                  (res.j && res.j.error) || 'Не удалось отправить. Попробуйте позже.';
+              }
+            })
+            .catch(function () {
+              status.textContent = 'Ошибка сети. Попробуйте позже.';
+            });
+        });
+      })();
+    </script>
   </body>
 </html>

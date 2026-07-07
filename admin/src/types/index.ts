@@ -174,3 +174,20 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
+
+export interface Feedback {
+  id: string;
+  name: string | null;
+  email: string | null;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface FeedbackResponse {
+  feedback: Feedback[];
+  total: number;
+  unread: number;
+  limit: number;
+  offset: number;
+}

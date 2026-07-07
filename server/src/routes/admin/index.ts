@@ -5,6 +5,7 @@ import { asyncHandler } from '../../middleware/errorHandler.js';
 import { requireAdmin } from '../../middleware/roles.js';
 import { adminStatsCache } from '../../services/cache.js';
 import auditRouter from './audit.js';
+import feedbackRouter from './feedback.js';
 import postsRouter from './posts.js';
 import statsRouter from './stats.js';
 import usersRouter from './users.js';
@@ -20,6 +21,7 @@ router.use('/users', usersRouter);
 router.use('/posts', postsRouter);
 router.use('/stats', statsRouter);
 router.use('/audit-log', auditRouter);
+router.use('/feedback', feedbackRouter);
 
 // Cache refresh endpoint
 router.post(
